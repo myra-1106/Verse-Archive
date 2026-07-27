@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "作者作品合集",
+  title: {
+    default: "Verse Archive",
+    template: "%s · Verse Archive",
+  },
   description: "发现不同作者的卡片、主题与气泡作品。",
 };
 

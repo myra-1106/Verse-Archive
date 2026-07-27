@@ -19,7 +19,7 @@ export async function getAuthorCollection(slug: string) {
 
 const workInclude = { mainAsset: true, currentVersion: true, images: { orderBy: { sortOrder: "asc" as const }, include: { asset: true } } };
 
-export async function getLatestWorks() {
-  const works = await db.work.findMany({ where: { status: { in: publicStatuses } }, take: 6, orderBy: { publishedAt: "desc" }, include: { ...workInclude, author: { include: { wechatQrAsset: true } } } });
+export async function getLatestWorks(limit = 6) {
+  const works = await db.work.findMany({ where: { status: { in: publicStatuses } }, take: limit, orderBy: { publishedAt: "desc" }, include: { ...workInclude, author: { include: { wechatQrAsset: true } } } });
   return works.map((work) => ({ work: { id: work.id, name: work.name, status: work.status as PublicWork["status"], supportsLab: work.supportsLab, supportsWcglass: work.supportsWcglass, directPriceCents: work.directPriceCents, repostPriceCents: work.repostPriceCents, features: work.features, repostRequirements: work.repostRequirements, purchaseNotes: work.purchaseNotes, mainImageUrl: url(work.mainAsset?.storageKey), images: work.images.map((image) => ({ id: image.id, url: url(image.asset.storageKey)!, alt: image.asset.altText || `${work.name}预览图` })), version: work.currentVersion?.version ?? "1.0.0", updatedAt: work.updatedAt } satisfies PublicWork, author: { name: work.author.name, publicWechatId: work.author.publicWechatId, qrUrl: url(work.author.wechatQrAsset?.storageKey) } }));
 }

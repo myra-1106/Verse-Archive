@@ -1,36 +1,32 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 作者作品合集
 
-## Getting Started
+面向手机端的多作者作品展示网站。前台展示作者合集与完整作品胶囊卡，后台供作者和管理员维护作者资料、自定义分类、作品和版本。
 
-First, run the development server:
+## 本地运行
+
+需要 Node.js 20+、pnpm 和 PostgreSQL 16。
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+cp .env.example .env
+docker compose up -d db
+pnpm install
+pnpm prisma migrate dev
+pnpm prisma db seed
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+打开 `http://localhost:3000`。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+演示 seed 会创建 `admin_demo / ChangeMe123!`。该账号和密码只能用于本地开发，生产环境禁止执行演示 seed。
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 检查
 
-## Learn More
+```bash
+pnpm test
+pnpm typecheck
+pnpm lint
+pnpm build
+pnpm playwright test
+```
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+当前电脑若没有 Docker 或 PostgreSQL，可以先运行不依赖数据库的前四项；数据库迁移、seed 和端到端测试必须在 PostgreSQL 可用后补验。

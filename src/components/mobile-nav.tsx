@@ -1,0 +1,2 @@
+import Link from "next/link";
+export function MobileNav() { return <nav aria-label="手机导航" className="fixed inset-x-0 bottom-0 z-20 grid grid-cols-4 border-t border-border bg-surface px-2 pb-[max(8px,env(safe-area-inset-bottom))] pt-2 text-center text-xs sm:hidden"><Link className="min-h-11 py-2" href="/">首页</Link><Link className="min-h-11 py-2" href="/authors">作者</Link><Link className="min-h-11 py-2" href="/favorites">收藏</Link><Link className="min-h-11 py-2" href="/settings">我的</Link></nav>; }

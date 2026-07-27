@@ -3,3 +3,6 @@ allowBuilds:
   esbuild: true
   sharp: true
   unrs-resolver: false
+minimumReleaseAgeExclude:
+  - '@prisma/cli-dev@0.16.26'
+  - '@prisma/dev@0.25.0'

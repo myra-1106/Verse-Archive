@@ -4,14 +4,14 @@
 
 ## 本地运行
 
-需要 Node.js 20+、pnpm 和 PostgreSQL 16。
+需要 Node.js 20+ 和 pnpm。项目可以用 Prisma Dev 启动本地 PostgreSQL，不要求安装 Docker。
 
 ```bash
 cp .env.example .env
-docker compose up -d db
 pnpm install
-pnpm prisma migrate dev
-pnpm prisma db seed
+pnpm db:dev
+pnpm db:push
+pnpm db:seed
 pnpm dev
 ```
 
@@ -29,4 +29,4 @@ pnpm build
 pnpm playwright test
 ```
 
-当前电脑若没有 Docker 或 PostgreSQL，可以先运行不依赖数据库的前四项；数据库迁移、seed 和端到端测试必须在 PostgreSQL 可用后补验。
+`pnpm db:dev` 会显示本机数据库连接地址。把该地址写入 `.env.local` 的 `DATABASE_URL`，并设置 `DEMO_MODE="0"`，即可使用真实数据库。

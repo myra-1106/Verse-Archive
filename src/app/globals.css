@@ -42,3 +42,21 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
 }
+
+@layer components {
+  .auth-page {
+    @apply flex min-h-screen items-center justify-center px-5 py-12;
+  }
+
+  .auth-card {
+    @apply w-full max-w-md rounded-[28px] border border-border bg-surface p-6 sm:p-9;
+  }
+
+  .field-input {
+    @apply min-h-11 w-full rounded-xl border border-border bg-background px-3 text-base outline-none focus:border-accent;
+  }
+
+  .primary-button {
+    @apply min-h-11 rounded-full bg-foreground px-5 font-medium text-background disabled:cursor-not-allowed disabled:opacity-50;
+  }
+}

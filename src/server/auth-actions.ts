@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { hashPassword } from "@/lib/password";
 import { registerSchema } from "@/lib/validation/auth";
+import { verifyPassword } from "@/lib/password";
+import { requireUser } from "@/server/current-user";
 
 export type RegisterState = { error: string | null };
 
@@ -41,4 +43,23 @@ export async function registerAction(
   }
 
   redirect("/login?registered=1");
+}
+
+export async function changePassword(formData: FormData) {
+  const user = await requireUser();
+  const currentPassword = String(formData.get("currentPassword") ?? "");
+  const newPassword = String(formData.get("newPassword") ?? "");
+  const account = await db.user.findUniqueOrThrow({ where: { id: user.id } });
+  if (!(await verifyPassword(account.passwordHash, currentPassword))) throw new Error("当前密码不正确");
+  const parsed = registerSchema.shape.password.safeParse(newPassword);
+  if (!parsed.success) throw new Error(parsed.error.issues[0]?.message ?? "新密码不符合要求");
+  await db.user.update({
+    where: { id: user.id },
+    data: {
+      passwordHash: await hashPassword(parsed.data),
+      mustChangePassword: false,
+      sessionVersion: { increment: 1 },
+    },
+  });
+  redirect("/login?passwordChanged=1");
 }

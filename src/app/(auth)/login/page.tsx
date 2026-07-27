@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { LoginForm } from "@/components/auth/login-form";
 
 export default function LoginPage() {
@@ -10,9 +9,7 @@ export default function LoginPage() {
         <div className="mt-8">
           <LoginForm />
         </div>
-        <p className="mt-7 text-center text-sm text-muted">
-          还没有账号？<Link className="text-foreground underline" href="/register">注册</Link>
-        </p>
+        <p className="mt-7 text-center text-sm text-muted">作者账号由管理员创建。</p>
       </section>
     </main>
   );

@@ -1,14 +1,18 @@
 import { updateOwnAuthorProfile } from "@/server/author-actions";
 import { requireUser } from "@/server/current-user";
 import { db } from "@/lib/db";
+import { AuthorImages } from "@/components/admin/author-images";
 
 export default async function AuthorProfilePage() {
   const user = await requireUser();
   if (!user.author) return <p>当前账号尚未绑定作者资料。</p>;
-  const author = await db.author.findUniqueOrThrow({ where: { id: user.author.id } });
+  const author = await db.author.findUniqueOrThrow({
+    where: { id: user.author.id },
+    include: { avatarAsset: true, coverAsset: true, wechatQrAsset: true },
+  });
 
   return (
-    <div className="max-w-2xl">
+    <div className="max-w-3xl">
       <h1 className="text-3xl font-semibold">作者资料</h1>
       <form action={updateOwnAuthorProfile} className="mt-8 space-y-5">
         <Field label="作者名称" name="name" defaultValue={author.name} />
@@ -18,6 +22,14 @@ export default async function AuthorProfilePage() {
         <label className="block text-sm font-medium">SEO 描述（可选）<textarea className="field-input mt-2 min-h-24 py-3" name="seoDescription" defaultValue={author.seoDescription ?? ""} /></label>
         <button className="primary-button" type="submit">保存资料</button>
       </form>
+      <AuthorImages
+        authorId={author.id}
+        images={{
+          avatar: author.avatarAsset ? `/${author.avatarAsset.storageKey}` : null,
+          cover: author.coverAsset ? `/${author.coverAsset.storageKey}` : null,
+          wechatQr: author.wechatQrAsset ? `/${author.wechatQrAsset.storageKey}` : null,
+        }}
+      />
     </div>
   );
 }

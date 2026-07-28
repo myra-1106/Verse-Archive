@@ -1,3 +1,5 @@
+"use client";
+
 import type { Asset, WorkImage } from "@prisma/client";
 import {
   deleteWorkPreviewImage,
@@ -25,16 +27,16 @@ export function WorkImages({
         <form action={uploadWorkMainImage} className="mt-3 rounded-2xl border border-border p-4">
           <input name="workId" type="hidden" value={workId} />
           {mainImageUrl ? <img alt="当前作品主图" className="mb-4 aspect-[4/3] w-full max-w-sm rounded-xl object-cover" src={mainImageUrl} /> : null}
-          <input accept="image/jpeg,image/png,image/webp,image/avif" name="image" required type="file" />
-          <button className="primary-button ml-3" type="submit">上传主图</button>
+          <input accept="image/*" name="image" onChange={(event) => event.currentTarget.form?.requestSubmit()} required type="file" />
+          <p className="mt-2 text-xs text-muted">选择后自动上传并应用</p>
         </form>
       </div>
       <div>
         <h2 className="text-lg font-semibold">上机预览图</h2>
         <form action={uploadWorkPreviewImages} className="mt-3 rounded-2xl border border-border p-4">
           <input name="workId" type="hidden" value={workId} />
-          <input accept="image/jpeg,image/png,image/webp,image/avif" multiple name="images" required type="file" />
-          <button className="primary-button ml-3" type="submit">批量上传</button>
+          <input accept="image/*" multiple name="images" onChange={(event) => event.currentTarget.form?.requestSubmit()} required type="file" />
+          <p className="mt-2 text-xs text-muted">可从相册或文件多选，选择后自动上传</p>
         </form>
         <ol className="mt-4 space-y-3">
           {previews.map((preview, index) => (

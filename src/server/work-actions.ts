@@ -3,6 +3,7 @@
 import { UserRole, WorkStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { randomUUID } from "node:crypto";
 import { db } from "@/lib/db";
 import { workSchema } from "@/lib/validation/work";
 import { requireAuthorAccess, requireRole, requireUser } from "@/server/current-user";
@@ -30,6 +31,7 @@ export async function createWork(formData: FormData) {
   const user = await requireUser();
   const authorId = await resolveAuthorId(formData);
   await requireAuthorAccess(authorId);
+  formData.set("slug", `work-${randomUUID()}`);
   const data = await parseWork(formData, authorId);
   const version = String(formData.get("version") ?? "1.0.0").trim();
   const work = await db.$transaction(async (tx) => {

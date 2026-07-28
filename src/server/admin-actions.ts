@@ -39,7 +39,7 @@ export async function createContentAdmin(formData: FormData) {
       data: {
         accountUserId: user.id,
         name: user.displayName,
-        publicWechatId: user.wechatId,
+        publicWechatId: "",
         slug: `author-${user.id}`,
         status: AuthorStatus.ACTIVE,
       },

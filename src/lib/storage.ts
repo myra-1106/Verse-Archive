@@ -4,30 +4,16 @@ import path from "node:path";
 import sharp from "sharp";
 import { put } from "@vercel/blob";
 
-const ALLOWED_IMAGE_TYPES = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/avif",
-]);
-
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 
 export function validateImageInput(file: { type: string; size: number }) {
-  if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
-    throw new Error("图片格式只支持 JPEG、PNG、WebP 和 AVIF");
+  if (!file.type.startsWith("image/") || file.type === "image/svg+xml") {
+    throw new Error("请选择照片或图片文件");
   }
   if (file.size > MAX_IMAGE_SIZE) {
     throw new Error("单张图片不能超过 10 MB");
   }
 }
-
-const FORMAT_DETAILS = {
-  jpeg: { mimeType: "image/jpeg", extension: "jpg" },
-  png: { mimeType: "image/png", extension: "png" },
-  webp: { mimeType: "image/webp", extension: "webp" },
-  avif: { mimeType: "image/avif", extension: "avif" },
-} as const;
 
 export async function saveImage(
   file: File,
@@ -36,42 +22,42 @@ export async function saveImage(
 ) {
   validateImageInput(file);
   const bytes = Buffer.from(await file.arrayBuffer());
-  const metadata = await sharp(bytes).metadata().catch(() => null);
-  const details = metadata?.format ? FORMAT_DETAILS[metadata.format as keyof typeof FORMAT_DETAILS] : undefined;
-
-  if (!details || !metadata?.width || !metadata.height || details.mimeType !== file.type) {
-    throw new Error("无法识别图片内容，或图片格式与文件不一致");
+  const image = sharp(bytes, { failOn: "error" });
+  const metadata = await image.metadata().catch(() => null);
+  if (!metadata?.width || !metadata.height) {
+    throw new Error("无法识别这张图片，请换一张照片重试");
   }
+  const normalized = await image.rotate().webp({ quality: 88 }).toBuffer();
 
   const year = String(now.getUTCFullYear());
   const month = String(now.getUTCMonth() + 1).padStart(2, "0");
-  const key = `uploads/${year}/${month}/${randomUUID()}.${details.extension}`;
+  const key = `uploads/${year}/${month}/${randomUUID()}.webp`;
 
   if (process.env.BLOB_READ_WRITE_TOKEN) {
-    const blob = await put(key, bytes, {
+    const blob = await put(key, normalized, {
       access: "public",
       addRandomSuffix: false,
-      contentType: details.mimeType,
+      contentType: "image/webp",
       token: process.env.BLOB_READ_WRITE_TOKEN,
     });
     return {
       key: blob.url,
-      mimeType: details.mimeType,
+      mimeType: "image/webp",
       width: metadata.width,
       height: metadata.height,
-      sizeBytes: bytes.length,
+      sizeBytes: normalized.length,
     };
   }
 
   const destination = path.join(uploadDirectory, key);
   await mkdir(path.dirname(destination), { recursive: true });
-  await writeFile(destination, bytes);
+  await writeFile(destination, normalized);
 
   return {
     key,
-    mimeType: details.mimeType,
+    mimeType: "image/webp",
     width: metadata.width,
     height: metadata.height,
-    sizeBytes: bytes.length,
+    sizeBytes: normalized.length,
   };
 }

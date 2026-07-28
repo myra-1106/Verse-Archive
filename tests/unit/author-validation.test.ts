@@ -19,6 +19,18 @@ describe("author validation", () => {
     expect(result.seoTitle).toBeNull();
   });
 
+  it("allows an author to keep the public WeChat number empty", () => {
+    const result = authorProfileSchema.parse({
+      name: "南枝",
+      bio: "",
+      publicWechatId: "",
+      seoTitle: "",
+      seoDescription: "",
+    });
+
+    expect(result.publicWechatId).toBe("");
+  });
+
   it("limits custom category names to 20 characters", () => {
     expect(categorySchema.safeParse({ name: "主题" }).success).toBe(true);
     expect(categorySchema.safeParse({ name: "a".repeat(21) }).success).toBe(false);

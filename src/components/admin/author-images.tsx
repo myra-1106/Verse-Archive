@@ -1,3 +1,5 @@
+"use client";
+
 import { uploadAuthorImage } from "@/server/upload-actions";
 
 type ImageKind = "avatar" | "cover" | "wechatQr";
@@ -26,8 +28,8 @@ export function AuthorImages({
             <div className="aspect-square overflow-hidden rounded-xl bg-background">
               {images[kind] ? <img alt={label} className="h-full w-full object-cover" src={images[kind]!} /> : null}
             </div>
-            <label className="mt-3 block text-sm font-medium">{label}<input accept="image/jpeg,image/png,image/webp,image/avif" className="mt-2 block w-full text-xs" name="image" required type="file" /></label>
-            <button className="mt-3 text-sm underline" type="submit">上传</button>
+            <label className="mt-3 block text-sm font-medium">{label}<input accept="image/*" className="mt-2 block w-full text-xs" name="image" onChange={(event) => event.currentTarget.form?.requestSubmit()} required type="file" /></label>
+            <p className="mt-2 text-xs text-muted">从相册或文件选择后自动上传并应用</p>
           </form>
         ))}
       </div>

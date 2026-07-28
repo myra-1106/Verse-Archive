@@ -12,6 +12,7 @@ export async function requireUser() {
     where: { id: session.user.id },
     select: {
       id: true,
+      wechatId: true,
       displayName: true,
       role: true,
       status: true,

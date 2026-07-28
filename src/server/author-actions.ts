@@ -82,7 +82,7 @@ export async function createAuthorWithAccount(formData: FormData) {
   const publicWechatId = String(formData.get("publicWechatId") ?? "").trim();
   const accountWechatId = String(formData.get("accountWechatId") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  if (!name || !publicWechatId || !/^[a-z0-9-]{2,50}$/.test(slug)) throw new Error("INVALID_AUTHOR");
+  if (!name || !/^[a-z0-9-]{2,50}$/.test(slug)) throw new Error("INVALID_AUTHOR");
   if (!/^[A-Za-z0-9_-]{2,32}$/.test(accountWechatId) || password.length < 8) throw new Error("INVALID_ACCOUNT");
   const passwordHash = await hashPassword(password);
   await db.$transaction(async (tx) => {

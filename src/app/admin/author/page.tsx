@@ -18,7 +18,8 @@ export default async function AuthorProfilePage() {
       <form action={updateOwnAuthorProfile} className="mt-8 space-y-5">
         <Field label="作者名称" name="name" defaultValue={author.name} />
         <label className="block text-sm font-medium">作者简介<textarea className="field-input mt-2 min-h-28 py-3" name="bio" defaultValue={author.bio} /></label>
-        <Field label="公开微信 ID" name="publicWechatId" defaultValue={author.publicWechatId} />
+        <label className="block text-sm font-medium">登录微信 ID（仅后台可见）<input className="field-input mt-2 opacity-70" value={user.wechatId} readOnly /></label>
+        <Field label="微信号（公开，访客可复制）" name="publicWechatId" defaultValue={author.publicWechatId} required={false} />
         <Field label="SEO 标题（可选）" name="seoTitle" defaultValue={author.seoTitle ?? ""} />
         <label className="block text-sm font-medium">SEO 描述（可选）<textarea className="field-input mt-2 min-h-24 py-3" name="seoDescription" defaultValue={author.seoDescription ?? ""} /></label>
         <button className="primary-button" type="submit">保存资料</button>
@@ -35,6 +36,6 @@ export default async function AuthorProfilePage() {
   );
 }
 
-function Field({ label, name, defaultValue }: { label: string; name: string; defaultValue: string }) {
-  return <label className="block text-sm font-medium">{label}<input className="field-input mt-2" name={name} defaultValue={defaultValue} required={name !== "seoTitle"} /></label>;
+function Field({ label, name, defaultValue, required = name !== "seoTitle" }: { label: string; name: string; defaultValue: string; required?: boolean }) {
+  return <label className="block text-sm font-medium">{label}<input className="field-input mt-2" name={name} defaultValue={defaultValue} required={required} /></label>;
 }

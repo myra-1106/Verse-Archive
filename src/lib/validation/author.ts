@@ -10,7 +10,7 @@ const optionalText = (max: number) =>
 export const authorProfileSchema = z.object({
   name: z.string().trim().min(1, "请输入作者名称").max(30),
   bio: z.string().trim().max(500),
-  publicWechatId: z.string().trim().min(1, "请输入公开微信 ID").max(64),
+  publicWechatId: z.string().trim().max(64),
   seoTitle: optionalText(70),
   seoDescription: optionalText(160),
 });

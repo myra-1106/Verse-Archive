@@ -7,6 +7,7 @@ import { randomUUID } from "node:crypto";
 import { db } from "@/lib/db";
 import { workSchema } from "@/lib/validation/work";
 import { requireAuthorAccess, requireRole, requireUser } from "@/server/current-user";
+import { legacyEnvironmentFlags } from "@/lib/environment-selection";
 
 async function resolveAuthorId(formData: FormData) {
   const user = await requireUser();
@@ -33,9 +34,14 @@ async function parseWork(formData: FormData, authorId: string) {
     environmentIds.push(environment.id);
   }
   if (!environmentIds.length) throw new Error("请选择至少一个适配环境");
-  const validCount = await db.environment.count({ where: { id: { in: environmentIds }, enabled: true } });
-  if (validCount !== new Set(environmentIds).size) throw new Error("INVALID_ENVIRONMENT");
-  return { data, environmentIds: [...new Set(environmentIds)] };
+  const uniqueEnvironmentIds = [...new Set(environmentIds)];
+  const validEnvironments = await db.environment.findMany({ where: { id: { in: uniqueEnvironmentIds }, enabled: true }, select: { id: true, name: true } });
+  if (validEnvironments.length !== uniqueEnvironmentIds.length) throw new Error("INVALID_ENVIRONMENT");
+  return {
+    data,
+    environmentIds: uniqueEnvironmentIds,
+    legacyFlags: legacyEnvironmentFlags(validEnvironments.map(({ name }) => name)),
+  };
 }
 
 export async function createWork(formData: FormData) {
@@ -43,13 +49,13 @@ export async function createWork(formData: FormData) {
   const authorId = await resolveAuthorId(formData);
   await requireAuthorAccess(authorId);
   formData.set("slug", `work-${randomUUID()}`);
-  const { data, environmentIds } = await parseWork(formData, authorId);
+  const { data, environmentIds, legacyFlags } = await parseWork(formData, authorId);
   const version = String(formData.get("version") ?? "1.0.0").trim();
   const work = await db.$transaction(async (tx) => {
     const created = await tx.work.create({ data: {
       ...data, authorId, createdById: user.id, updatedById: user.id,
       environments: { create: environmentIds.map((environmentId) => ({ environmentId })) },
-      supportsLab: false, supportsWcglass: false,
+      ...legacyFlags,
     } });
     const currentVersion = await tx.workVersion.create({ data: { workId: created.id, version, releasedAt: new Date(), changeLog: "首次发布。", minLabVersion: "latest", minWcglassVersion: "latest", createdById: user.id } });
     return tx.work.update({ where: { id: created.id }, data: { currentVersionId: currentVersion.id } });
@@ -62,9 +68,9 @@ export async function updateWork(formData: FormData) {
   const workId = String(formData.get("workId") ?? "");
   const work = await db.work.findUniqueOrThrow({ where: { id: workId }, include: { author: true } });
   await requireAuthorAccess(work.authorId);
-  const { data, environmentIds } = await parseWork(formData, work.authorId);
+  const { data, environmentIds, legacyFlags } = await parseWork(formData, work.authorId);
   await db.work.update({ where: { id: work.id }, data: {
-    ...data, updatedById: user.id,
+    ...data, ...legacyFlags, updatedById: user.id,
     environments: { deleteMany: {}, create: environmentIds.map((environmentId) => ({ environmentId })) },
   } });
   revalidatePath(`/admin/works/${work.id}/edit`);

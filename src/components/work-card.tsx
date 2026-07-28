@@ -33,7 +33,7 @@ export function WorkCard({ work, author, compact = false }: { work: PublicWork; 
           <div className="flex gap-1 overflow-x-auto whitespace-nowrap">{environmentNames.map((name) => <Tag key={name}>{name}</Tag>)}</div>
           <div className="flex gap-3 text-xs"><span><span className="text-muted">直购 </span><strong>{formatCny(work.directPriceCents)}</strong></span><span><span className="text-muted">转发 </span><strong>{formatCny(work.repostPriceCents)}</strong></span></div>
         </div>
-        {work.images.length ? <div className="relative z-20 mt-1.5 flex min-h-0 flex-1 snap-x gap-2 overflow-x-auto">
+        {work.images.length ? <div className="relative z-20 mt-auto flex shrink-0 snap-x gap-2 overflow-x-auto pt-1.5" data-testid="compact-preview-strip" style={{ height: "min(40%, 144px)" }}>
           {work.images.map((image, index) => <button aria-label={`放大${image.alt}`} className="h-full min-w-14 snap-start overflow-hidden rounded-lg bg-background sm:min-w-20" key={image.id} onClick={() => setLightboxIndex(index + previewOffset)} type="button"><Image alt={image.alt} className="h-full w-full object-contain" height={120} src={image.url} width={160}/></button>)}
         </div> : <div className="min-h-0 flex-1" />}
       </div>

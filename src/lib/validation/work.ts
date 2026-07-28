@@ -1,33 +1,28 @@
 import { z } from "zod";
 
-const checkbox = z.preprocess(
-  (value) => value === true || value === "on" || value === "true",
-  z.boolean(),
-);
-
 const yuan = z
   .string()
   .trim()
   .regex(/^\d{1,7}(?:\.\d{1,2})?$/, "请输入正确的人民币价格")
   .transform((value) => Math.round(Number(value) * 100))
   .refine((value) => value <= 1_000_000, "价格不能超过 10000 元");
+const checkbox = z.preprocess((value) => value === "on" || value === "true" || value === true, z.boolean());
 
 export const workSchema = z
   .object({
     name: z.string().trim().min(1).max(80),
     slug: z.string().trim().toLowerCase().regex(/^[a-z0-9-]{2,80}$/),
-    authorCategoryId: z.string().trim().transform((value) => value || null),
+    authorCategoryId: z.string().trim().min(1, "请选择作品分类"),
     directPriceYuan: yuan,
     repostPriceYuan: yuan,
-    supportsLab: checkbox,
-    supportsWcglass: checkbox,
     features: z.string().trim().min(1).max(2000),
+    usageRequirements: z.string().trim().max(2000).default(""),
+    acquisitionMethod: z.string().trim().max(2000).default(""),
     repostRequirements: z.string().trim().min(1).max(2000),
     purchaseNotes: z.string().trim().min(1).max(2000),
-  })
-  .refine((value) => value.supportsLab || value.supportsWcglass, {
-    message: "至少选择一个支持环境",
-    path: ["supportsLab"],
+    contactDetails: z.string().trim().max(500).default(""),
+    otherNotes: z.string().trim().max(2000).default(""),
+    featured: checkbox,
   })
   .transform(({ directPriceYuan, repostPriceYuan, ...rest }) => ({
     ...rest,

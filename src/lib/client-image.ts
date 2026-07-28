@@ -59,7 +59,7 @@ async function normalizeImage(file: File) {
   });
 }
 
-export async function prepareImageInput(input: HTMLInputElement, maxFiles = 1) {
+export async function prepareImageInput(input: HTMLInputElement, maxFiles = Number.POSITIVE_INFINITY) {
   const files = Array.from(input.files ?? []);
   if (!files.length) return;
   if (files.length > maxFiles) throw new Error(`每次最多选择 ${maxFiles} 张图片`);

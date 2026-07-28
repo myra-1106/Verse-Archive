@@ -19,6 +19,10 @@ export default async function NewWorkPage({ searchParams }: { searchParams: Prom
   }
   const author = await db.author.findFirstOrThrow({ where: { id: authorId, status: "ACTIVE" } });
   if (user.role === UserRole.AUTHOR && author.id !== ownAuthorId) throw new Error("FORBIDDEN");
-  const categories = await db.authorCategory.findMany({ where: { authorId: author.id }, orderBy: { displayOrder: "asc" } });
-  return <div className="max-w-2xl"><h1 className="text-3xl font-semibold">新建作品 · {author.name}</h1><WorkForm action={createWork} authorId={author.id} categories={categories} /></div>;
+  const [categories, environments, templates] = await Promise.all([
+    db.authorCategory.findMany({ where: { authorId: author.id }, orderBy: { displayOrder: "asc" } }),
+    db.environment.findMany({ where: { enabled: true }, orderBy: [{ displayOrder: "asc" }, { name: "asc" }] }),
+    db.authorTemplate.findMany({ where: { authorId: author.id }, include: { environments: true }, orderBy: { displayOrder: "asc" } }),
+  ]);
+  return <div className="max-w-2xl"><h1 className="text-3xl font-semibold">新建作品 · {author.name}</h1>{categories.length ? <WorkForm action={createWork} authorId={author.id} categories={categories} environments={environments} templates={templates} /> : <p className="mt-5">请先在作者管理中新增作品分类。</p>}</div>;
 }

@@ -2,6 +2,7 @@
 
 import type { Asset, WorkImage } from "@prisma/client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   deleteWorkPreviewImage,
   moveWorkPreviewImage,
@@ -23,14 +24,47 @@ export function WorkImages({
   previews: Preview[];
 }) {
   const [error, setError] = useState("");
+  const [status, setStatus] = useState("");
+  const [busy, setBusy] = useState(false);
+  const router = useRouter();
 
-  async function upload(input: HTMLInputElement, maxFiles = 1) {
+  async function uploadMain(input: HTMLInputElement) {
     try {
+      setBusy(true);
       setError("");
-      await prepareImageInput(input, maxFiles);
-      input.form?.requestSubmit();
+      setStatus("正在处理并上传…");
+      await prepareImageInput(input);
+      const file = input.files?.[0];
+      if (!file) return;
+      const data = new FormData(); data.set("workId", workId); data.set("image", file);
+      await uploadWorkMainImage(data);
+      setStatus("主图已上传并应用");
+      router.refresh();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "图片处理失败，请重新选择");
+      setStatus("");
+    } finally {
+      setBusy(false); input.value = "";
+    }
+  }
+
+  async function uploadPreviews(input: HTMLInputElement) {
+    try {
+      setBusy(true); setError(""); setStatus("正在处理图片…");
+      await prepareImageInput(input);
+      const files = Array.from(input.files ?? []);
+      for (const [index, file] of files.entries()) {
+        setStatus(`正在上传 ${index + 1}/${files.length}…`);
+        const data = new FormData(); data.set("workId", workId); data.append("images", file);
+        await uploadWorkPreviewImages(data);
+      }
+      setStatus(`${files.length} 张预览图已上传`);
+      router.refresh();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "上传失败，请重新选择");
+      setStatus("");
+    } finally {
+      setBusy(false); input.value = "";
     }
   }
 
@@ -38,24 +72,19 @@ export function WorkImages({
     <section className="mt-10 space-y-7">
       <div>
         <h2 className="text-lg font-semibold">作品主图</h2>
-        <form action={uploadWorkMainImage} className="mt-3 rounded-2xl border border-border p-4">
-          <input name="workId" type="hidden" value={workId} />
-          {mainImageUrl ? <img alt="当前作品主图" className="mb-4 aspect-[4/3] w-full max-w-sm rounded-xl object-cover" src={mainImageUrl} /> : null}
-          <input accept="image/*,.heic,.heif" name="image" onChange={(event) => void upload(event.currentTarget)} required type="file" />
+        <div className="mt-3 rounded-2xl border border-border p-4">
+          {mainImageUrl ? <img alt="当前作品主图" className="mb-4 aspect-[4/3] w-full max-w-sm rounded-xl object-contain" src={mainImageUrl} /> : null}
+          <input accept="image/*,.heic,.heif" disabled={busy} name="image" onChange={(event) => void uploadMain(event.currentTarget)} required type="file" />
           <p className="mt-2 text-xs text-muted">选择后自动上传并应用</p>
-        </form>
+        </div>
       </div>
       <div>
         <h2 className="text-lg font-semibold">上机预览图</h2>
-        <form action={uploadWorkPreviewImages} className="mt-3 rounded-2xl border border-border p-4">
-          <input name="workId" type="hidden" value={workId} />
-          <input accept="image/*,.heic,.heif" multiple name="images" onChange={(event) => void upload(event.currentTarget, 5)} required type="file" />
-          <p className="mt-2 text-xs text-muted">可从相册或文件多选，选择后自动上传</p>
-        </form>
+        <div className="mt-3 rounded-2xl border border-border p-4"><input accept="image/*,.heic,.heif" disabled={busy} multiple name="images" onChange={(event) => void uploadPreviews(event.currentTarget)} required type="file" /><p className="mt-2 text-xs text-muted">可一次选择任意数量，也可继续追加；选择后自动上传</p></div>
         <ol className="mt-4 space-y-3">
           {previews.map((preview, index) => (
             <li className="flex items-center gap-3 rounded-2xl border border-border p-3" key={preview.id}>
-              <img alt={preview.asset.altText} className="h-20 w-24 rounded-xl object-cover" src={assetUrl(preview.asset.storageKey)!} />
+              <img alt={preview.asset.altText} className="h-20 w-24 rounded-xl object-contain" src={assetUrl(preview.asset.storageKey)!} />
               <span className="min-w-0 flex-1 text-sm text-muted">预览图 {index + 1}</span>
               <form action={moveWorkPreviewImage}><input name="imageId" type="hidden" value={preview.id} /><button aria-label={`上移预览图${index + 1}`} disabled={index === 0} name="direction" value="up">↑</button></form>
               <form action={moveWorkPreviewImage}><input name="imageId" type="hidden" value={preview.id} /><button aria-label={`下移预览图${index + 1}`} disabled={index === previews.length - 1} name="direction" value="down">↓</button></form>
@@ -65,6 +94,7 @@ export function WorkImages({
         </ol>
       </div>
       {error ? <p className="text-sm text-red-600" role="alert">{error}</p> : null}
+      {status ? <p className="text-sm text-green-600" aria-live="polite">{status}</p> : null}
     </section>
   );
 }

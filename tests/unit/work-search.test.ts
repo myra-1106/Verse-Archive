@@ -13,13 +13,13 @@ describe("work filters", () => {
       q: "南枝",
       author: "author-1",
       category: "category-1",
-      environment: "LAB",
+      environment: "lab",
       sort: "updated",
     });
   });
 
   it("drops unsupported values", () => {
-    expect(normalizeWorkFilters({ environment: "other", sort: "popular" })).toEqual({
+    expect(normalizeWorkFilters({ environment: "", sort: "popular" })).toEqual({
       q: "",
       author: "",
       category: "",

@@ -1,4 +1,5 @@
 import type { WorkFilters as FilterValues } from "@/lib/work-filters";
+import Link from "next/link";
 
 type Option = { id: string; name: string };
 type CategoryOption = Option & { authorId: string; authorName: string };
@@ -7,10 +8,12 @@ export function WorkFilters({
   filters,
   authors,
   categories,
+  environments,
 }: {
   filters: FilterValues;
   authors: Option[];
   categories: CategoryOption[];
+  environments: Option[];
 }) {
   const visibleCategories = filters.author ? categories.filter((category) => category.authorId === filters.author) : categories;
   return (
@@ -26,8 +29,7 @@ export function WorkFilters({
       </select>
       <select className="field-input" defaultValue={filters.environment} name="environment">
         <option value="">全部环境</option>
-        <option value="lab">LAB</option>
-        <option value="wcglass">WCGlass</option>
+        {environments.map((environment) => <option key={environment.id} value={environment.id}>{environment.name}</option>)}
       </select>
       <select className="field-input" defaultValue={filters.sort} name="sort">
         <option value="latest">最新发布</option>
@@ -35,7 +37,7 @@ export function WorkFilters({
       </select>
       <div className="flex gap-3 sm:col-span-2 lg:col-span-6">
         <button className="primary-button" type="submit">搜索</button>
-        <a className="inline-flex min-h-11 items-center px-3 text-sm text-muted" href="/works">清除筛选</a>
+        <Link className="inline-flex min-h-11 items-center px-3 text-sm text-muted" href="/works">清除筛选</Link>
       </div>
     </form>
   );

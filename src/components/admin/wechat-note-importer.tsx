@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { parseWechatNote } from "@/lib/parse-wechat-note";
+import type { ParsedWechatNote } from "@/lib/parse-wechat-note";
 
 function setValue(form: HTMLFormElement, name: string, value: string | boolean) {
   const field = form.elements.namedItem(name);
@@ -9,10 +10,11 @@ function setValue(form: HTMLFormElement, name: string, value: string | boolean) 
     field.checked = Boolean(value);
   } else if (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement) {
     field.value = String(value);
+    field.dispatchEvent(new Event("input", { bubbles: true }));
   }
 }
 
-export function WechatNoteImporter() {
+export function WechatNoteImporter({ onParsed }: { onParsed?: (result: ParsedWechatNote) => void }) {
   const [note, setNote] = useState("");
   const [message, setMessage] = useState("");
 
@@ -23,6 +25,7 @@ export function WechatNoteImporter() {
       return;
     }
     const result = parseWechatNote(note);
+    onParsed?.(result);
     for (const [name, value] of Object.entries(result)) setValue(form, name, value);
     const missing = [
       !result.name && "作品名称",

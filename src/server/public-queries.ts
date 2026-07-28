@@ -20,25 +20,39 @@ export async function getAuthorCollection(slug: string) {
     const selected = demoAuthors.find((author) => author.slug === slug)!;
     return { ...demoCollection, slug: selected.slug, name: selected.name, bio: selected.bio };
   }
-  const author = await db.author.findFirst({ where: { slug, status: AuthorStatus.ACTIVE }, include: { avatarAsset: true, wechatQrAsset: true, categories: { orderBy: { displayOrder: "asc" }, include: { works: { where: { status: { in: publicStatuses } }, orderBy: { displayOrder: "asc" }, include: workInclude } } }, works: { where: { authorCategoryId: null, status: { in: publicStatuses } }, orderBy: { displayOrder: "asc" }, include: workInclude } } });
+  const author = await db.author.findFirst({ where: { slug, status: AuthorStatus.ACTIVE }, include: { avatarAsset: true, wechatQrAsset: true, categories: { orderBy: { displayOrder: "asc" }, include: { works: { where: { status: { in: publicStatuses } }, take: 3, orderBy: [{ featured: "desc" }, { publishedAt: "desc" }], include: workInclude } } } } });
   if (!author) return null;
-  const mapWork = (work: typeof author.works[number]): PublicWork => ({ id: work.id, name: work.name, status: work.status as PublicWork["status"], supportsLab: work.supportsLab, supportsWcglass: work.supportsWcglass, directPriceCents: work.directPriceCents, repostPriceCents: work.repostPriceCents, features: work.features, repostRequirements: work.repostRequirements, purchaseNotes: work.purchaseNotes, mainImageUrl: url(work.mainAsset?.storageKey), images: work.images.map((image) => ({ id: image.id, url: url(image.asset.storageKey)!, alt: image.asset.altText || `${work.name}预览图` })), version: work.currentVersion?.version ?? "1.0.0", updatedAt: work.updatedAt });
-  return { id: author.id, slug: author.slug, name: author.name, bio: author.bio, publicWechatId: author.publicWechatId, avatarUrl: url(author.avatarAsset?.storageKey), qrUrl: url(author.wechatQrAsset?.storageKey), categories: author.categories.filter((category) => category.works.length).map((category) => ({ id: category.id, name: category.name, works: category.works.map(mapWork) })), uncategorized: author.works.map(mapWork) };
+  return { id: author.id, slug: author.slug, name: author.name, bio: author.bio, publicWechatId: author.publicWechatId, avatarUrl: url(author.avatarAsset?.storageKey), qrUrl: url(author.wechatQrAsset?.storageKey), categories: author.categories.filter((category) => category.works.length).map((category) => ({ id: category.id, name: category.name, works: category.works.map(mapWork) })) };
 }
 
-const workInclude = { mainAsset: true, currentVersion: true, images: { orderBy: { sortOrder: "asc" as const }, include: { asset: true } } };
+const workInclude = { mainAsset: true, currentVersion: true, environments: { include: { environment: true } }, images: { orderBy: { sortOrder: "asc" as const }, include: { asset: true } } };
+
+function mapWork(work: Prisma.WorkGetPayload<{ include: typeof workInclude }>): PublicWork {
+  return {
+    id: work.id, name: work.name, status: work.status as PublicWork["status"],
+    supportsLab: work.supportsLab, supportsWcglass: work.supportsWcglass,
+    environments: work.environments.map(({ environment }) => environment.name),
+    directPriceCents: work.directPriceCents, repostPriceCents: work.repostPriceCents,
+    features: work.features, usageRequirements: work.usageRequirements, acquisitionMethod: work.acquisitionMethod,
+    repostRequirements: work.repostRequirements, purchaseNotes: work.purchaseNotes,
+    contactDetails: work.contactDetails, otherNotes: work.otherNotes,
+    mainImageUrl: url(work.mainAsset?.storageKey),
+    images: work.images.map((image) => ({ id: image.id, url: url(image.asset.storageKey)!, alt: image.asset.altText || `${work.name}预览图` })),
+    version: work.currentVersion?.version ?? "1.0.0", updatedAt: work.updatedAt,
+  };
+}
 
 export async function getLatestWorks(limit = 6) {
   if (process.env.DEMO_MODE === "1") return demoWorks.slice(0, limit);
   const works = await db.work.findMany({ where: { status: { in: publicStatuses } }, take: limit, orderBy: { publishedAt: "desc" }, include: { ...workInclude, author: { include: { wechatQrAsset: true } } } });
-  return works.map((work) => ({ work: { id: work.id, name: work.name, status: work.status as PublicWork["status"], supportsLab: work.supportsLab, supportsWcglass: work.supportsWcglass, directPriceCents: work.directPriceCents, repostPriceCents: work.repostPriceCents, features: work.features, repostRequirements: work.repostRequirements, purchaseNotes: work.purchaseNotes, mainImageUrl: url(work.mainAsset?.storageKey), images: work.images.map((image) => ({ id: image.id, url: url(image.asset.storageKey)!, alt: image.asset.altText || `${work.name}预览图` })), version: work.currentVersion?.version ?? "1.0.0", updatedAt: work.updatedAt } satisfies PublicWork, author: { name: work.author.name, publicWechatId: work.author.publicWechatId, qrUrl: url(work.author.wechatQrAsset?.storageKey) } }));
+  return works.map((work) => ({ work: mapWork(work), author: { name: work.author.name, publicWechatId: work.author.publicWechatId, qrUrl: url(work.author.wechatQrAsset?.storageKey) } }));
 }
 
 export async function getWorkFilterOptions() {
   if (process.env.DEMO_MODE === "1") {
     return {
       authors: demoAuthors.map((author) => ({ id: author.slug, name: author.name })),
-      categories: [],
+      categories: [], environments: [{ id: "LAB", name: "LAB" }, { id: "WCGlass", name: "WCGlass" }],
     };
   }
   const authors = await db.author.findMany({
@@ -50,13 +64,14 @@ export async function getWorkFilterOptions() {
       categories: { orderBy: { displayOrder: "asc" }, select: { id: true, name: true } },
     },
   });
+  const environments = await db.environment.findMany({ where: { enabled: true }, orderBy: [{ displayOrder: "asc" }, { name: "asc" }], select: { id: true, name: true } });
   return {
     authors: authors.map(({ id, name }) => ({ id, name })),
     categories: authors.flatMap((author) => author.categories.map((category) => ({
       ...category,
       authorId: author.id,
       authorName: author.name,
-    }))),
+    }))), environments,
   };
 }
 
@@ -80,8 +95,7 @@ export async function getFilteredWorks(filters: WorkFilters) {
     ] } : {}),
     ...(filters.author ? { authorId: filters.author } : {}),
     ...(filters.category ? { authorCategoryId: filters.category } : {}),
-    ...(filters.environment === "LAB" ? { supportsLab: true } : {}),
-    ...(filters.environment === "WCGlass" ? { supportsWcglass: true } : {}),
+    ...(filters.environment ? { environments: { some: { environmentId: filters.environment } } } : {}),
   };
   const works = await db.work.findMany({
     where,
@@ -89,26 +103,28 @@ export async function getFilteredWorks(filters: WorkFilters) {
     include: { ...workInclude, author: { include: { wechatQrAsset: true } } },
   });
   return works.map((work) => ({
-    work: {
-      id: work.id,
-      name: work.name,
-      status: work.status as PublicWork["status"],
-      supportsLab: work.supportsLab,
-      supportsWcglass: work.supportsWcglass,
-      directPriceCents: work.directPriceCents,
-      repostPriceCents: work.repostPriceCents,
-      features: work.features,
-      repostRequirements: work.repostRequirements,
-      purchaseNotes: work.purchaseNotes,
-      mainImageUrl: url(work.mainAsset?.storageKey),
-      images: work.images.map((image) => ({ id: image.id, url: url(image.asset.storageKey)!, alt: image.asset.altText || `${work.name}预览图` })),
-      version: work.currentVersion?.version ?? "1.0.0",
-      updatedAt: work.updatedAt,
-    } satisfies PublicWork,
+    work: mapWork(work),
     author: {
       name: work.author.name,
       publicWechatId: work.author.publicWechatId,
       qrUrl: url(work.author.wechatQrAsset?.storageKey),
     },
   }));
+}
+
+export async function getAuthorCategory(slug: string, categoryId: string) {
+  const author = await db.author.findFirst({ where: { slug, status: AuthorStatus.ACTIVE }, include: { avatarAsset: true, wechatQrAsset: true } });
+  if (!author) return null;
+  const category = await db.authorCategory.findFirst({
+    where: { id: categoryId, authorId: author.id },
+    include: { works: { where: { status: { in: publicStatuses } }, orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }], include: workInclude } },
+  });
+  if (!category) return null;
+  return { author: { name: author.name, slug: author.slug, publicWechatId: author.publicWechatId, qrUrl: url(author.wechatQrAsset?.storageKey) }, category: { id: category.id, name: category.name, works: category.works.map(mapWork) } };
+}
+
+export async function getPublicWork(id: string) {
+  const work = await db.work.findFirst({ where: { id, status: { in: publicStatuses } }, include: { ...workInclude, author: { include: { wechatQrAsset: true } } } });
+  if (!work) return null;
+  return { work: mapWork(work), author: { name: work.author.name, publicWechatId: work.author.publicWechatId, qrUrl: url(work.author.wechatQrAsset?.storageKey) } };
 }

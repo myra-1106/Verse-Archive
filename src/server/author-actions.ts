@@ -49,10 +49,18 @@ export async function deleteOwnCategory(formData: FormData) {
   const category = await db.authorCategory.findFirst({ where: { id: categoryId, authorId } });
   if (!category) throw new Error("CATEGORY_NOT_FOUND");
 
-  await db.$transaction([
-    db.work.updateMany({ where: { authorCategoryId: category.id }, data: { authorCategoryId: null } }),
-    db.authorCategory.delete({ where: { id: category.id } }),
-  ]);
+  const workCount = await db.work.count({ where: { authorCategoryId: category.id } });
+  if (workCount) throw new Error("请先把分类内作品移动到其他分类");
+  await db.authorCategory.delete({ where: { id: category.id } });
+  revalidatePath("/admin/author/categories");
+}
+
+export async function renameOwnCategory(formData: FormData) {
+  const authorId = await currentAuthorId();
+  const categoryId = String(formData.get("categoryId") ?? "");
+  const { name } = categorySchema.parse(Object.fromEntries(formData));
+  const category = await db.authorCategory.findFirstOrThrow({ where: { id: categoryId, authorId } });
+  await db.authorCategory.update({ where: { id: category.id }, data: { name } });
   revalidatePath("/admin/author/categories");
 }
 

@@ -3,6 +3,7 @@ import { requireUser } from "@/server/current-user";
 import { db } from "@/lib/db";
 import { AuthorImages } from "@/components/admin/author-images";
 import { assetUrl } from "@/lib/assets";
+import { SubmitButton } from "@/components/admin/submit-button";
 
 export default async function AuthorProfilePage() {
   const user = await requireUser();
@@ -22,7 +23,7 @@ export default async function AuthorProfilePage() {
         <Field label="微信号（公开，访客可复制）" name="publicWechatId" defaultValue={author.publicWechatId} required={false} />
         <Field label="SEO 标题（可选）" name="seoTitle" defaultValue={author.seoTitle ?? ""} />
         <label className="block text-sm font-medium">SEO 描述（可选）<textarea className="field-input mt-2 min-h-24 py-3" name="seoDescription" defaultValue={author.seoDescription ?? ""} /></label>
-        <button className="primary-button" type="submit">保存资料</button>
+        <SubmitButton pendingText="保存中…">保存资料</SubmitButton>
       </form>
       <AuthorImages
         authorId={author.id}

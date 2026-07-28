@@ -20,11 +20,22 @@ async function resolveAuthorId(formData: FormData) {
 
 async function parseWork(formData: FormData, authorId: string) {
   const data = workSchema.parse(Object.fromEntries(formData));
-  if (data.authorCategoryId) {
-    const category = await db.authorCategory.findFirst({ where: { id: data.authorCategoryId, authorId } });
-    if (!category) throw new Error("INVALID_CATEGORY");
+  const category = await db.authorCategory.findFirst({ where: { id: data.authorCategoryId, authorId } });
+  if (!category) throw new Error("INVALID_CATEGORY");
+  const environmentIds = formData.getAll("environmentIds").map(String).filter(Boolean);
+  const newEnvironmentName = String(formData.get("newEnvironmentName") ?? "").trim();
+  if (newEnvironmentName) {
+    const environment = await db.environment.upsert({
+      where: { name: newEnvironmentName },
+      update: { enabled: true },
+      create: { name: newEnvironmentName, displayOrder: await db.environment.count() },
+    });
+    environmentIds.push(environment.id);
   }
-  return data;
+  if (!environmentIds.length) throw new Error("请选择至少一个适配环境");
+  const validCount = await db.environment.count({ where: { id: { in: environmentIds }, enabled: true } });
+  if (validCount !== new Set(environmentIds).size) throw new Error("INVALID_ENVIRONMENT");
+  return { data, environmentIds: [...new Set(environmentIds)] };
 }
 
 export async function createWork(formData: FormData) {
@@ -32,10 +43,14 @@ export async function createWork(formData: FormData) {
   const authorId = await resolveAuthorId(formData);
   await requireAuthorAccess(authorId);
   formData.set("slug", `work-${randomUUID()}`);
-  const data = await parseWork(formData, authorId);
+  const { data, environmentIds } = await parseWork(formData, authorId);
   const version = String(formData.get("version") ?? "1.0.0").trim();
   const work = await db.$transaction(async (tx) => {
-    const created = await tx.work.create({ data: { ...data, authorId, createdById: user.id, updatedById: user.id } });
+    const created = await tx.work.create({ data: {
+      ...data, authorId, createdById: user.id, updatedById: user.id,
+      environments: { create: environmentIds.map((environmentId) => ({ environmentId })) },
+      supportsLab: false, supportsWcglass: false,
+    } });
     const currentVersion = await tx.workVersion.create({ data: { workId: created.id, version, releasedAt: new Date(), changeLog: "首次发布。", minLabVersion: "latest", minWcglassVersion: "latest", createdById: user.id } });
     return tx.work.update({ where: { id: created.id }, data: { currentVersionId: currentVersion.id } });
   });
@@ -47,9 +62,13 @@ export async function updateWork(formData: FormData) {
   const workId = String(formData.get("workId") ?? "");
   const work = await db.work.findUniqueOrThrow({ where: { id: workId }, include: { author: true } });
   await requireAuthorAccess(work.authorId);
-  const data = await parseWork(formData, work.authorId);
-  await db.work.update({ where: { id: work.id }, data: { ...data, updatedById: user.id } });
+  const { data, environmentIds } = await parseWork(formData, work.authorId);
+  await db.work.update({ where: { id: work.id }, data: {
+    ...data, updatedById: user.id,
+    environments: { deleteMany: {}, create: environmentIds.map((environmentId) => ({ environmentId })) },
+  } });
   revalidatePath(`/admin/works/${work.id}/edit`);
+  redirect(`/admin/works/${work.id}/edit?saved=1`);
 }
 
 export async function setWorkStatus(formData: FormData) {
@@ -60,6 +79,7 @@ export async function setWorkStatus(formData: FormData) {
   await requireAuthorAccess(work.authorId);
   await db.work.update({ where: { id: work.id }, data: { status, publishedAt: status === WorkStatus.PUBLISHED ? work.publishedAt ?? new Date() : work.publishedAt, deletedAt: status === WorkStatus.DELETED ? new Date() : null } });
   revalidatePath("/admin/works");
+  redirect("/admin/works?changed=1");
 }
 
 export async function restoreWork(formData: FormData) {

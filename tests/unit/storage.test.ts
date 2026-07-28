@@ -38,7 +38,7 @@ describe("image uploads", () => {
       height: 1,
       sizeBytes: ONE_PIXEL_PNG.length,
     });
-    expect(saved.key).toMatch(/^2026\/07\/[0-9a-f-]+\.png$/);
+    expect(saved.key).toMatch(/^uploads\/2026\/07\/[0-9a-f-]+\.png$/);
     expect(await readFile(path.join(directory, saved.key))).toEqual(ONE_PIXEL_PNG);
   });
 });

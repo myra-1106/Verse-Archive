@@ -5,6 +5,7 @@ import {
   uploadWorkMainImage,
   uploadWorkPreviewImages,
 } from "@/server/upload-actions";
+import { assetUrl } from "@/lib/assets";
 
 type Preview = WorkImage & { asset: Asset };
 
@@ -38,7 +39,7 @@ export function WorkImages({
         <ol className="mt-4 space-y-3">
           {previews.map((preview, index) => (
             <li className="flex items-center gap-3 rounded-2xl border border-border p-3" key={preview.id}>
-              <img alt={preview.asset.altText} className="h-20 w-24 rounded-xl object-cover" src={`/${preview.asset.storageKey}`} />
+              <img alt={preview.asset.altText} className="h-20 w-24 rounded-xl object-cover" src={assetUrl(preview.asset.storageKey)!} />
               <span className="min-w-0 flex-1 text-sm text-muted">预览图 {index + 1}</span>
               <form action={moveWorkPreviewImage}><input name="imageId" type="hidden" value={preview.id} /><button aria-label={`上移预览图${index + 1}`} disabled={index === 0} name="direction" value="up">↑</button></form>
               <form action={moveWorkPreviewImage}><input name="imageId" type="hidden" value={preview.id} /><button aria-label={`下移预览图${index + 1}`} disabled={index === previews.length - 1} name="direction" value="down">↓</button></form>

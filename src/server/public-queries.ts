@@ -3,9 +3,10 @@ import { db } from "@/lib/db";
 import type { PublicWork } from "@/components/work-card";
 import { demoAuthors, demoCollection, demoWorks } from "@/server/demo-data";
 import type { WorkFilters } from "@/lib/work-filters";
+import { assetUrl } from "@/lib/assets";
 
 const publicStatuses = [WorkStatus.PUBLISHED, WorkStatus.OFF_SHELF];
-const url = (key?: string | null) => key ? `/${key.replace(/^\/+/, "")}` : null;
+const url = assetUrl;
 
 export async function getAuthors(limit?: number) {
   if (process.env.DEMO_MODE === "1") return limit ? demoAuthors.slice(0, limit) : demoAuthors;

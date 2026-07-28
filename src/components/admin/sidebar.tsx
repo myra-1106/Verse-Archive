@@ -22,6 +22,9 @@ export function AdminSidebar({ role }: { role: UserRole }) {
         {role === "CONTENT_ADMIN" || role === "SUPER_ADMIN" ? (
           <Link className="whitespace-nowrap text-sm text-muted hover:text-foreground" href="/admin/authors">全部作者</Link>
         ) : null}
+        {role === "SUPER_ADMIN" ? (
+          <Link className="whitespace-nowrap text-sm text-muted hover:text-foreground" href="/admin/admins">管理员账号</Link>
+        ) : null}
       </nav>
     </aside>
   );

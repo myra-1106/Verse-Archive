@@ -12,7 +12,7 @@ async function createAsset(file: File, uploadedById: string, altText: string) {
   const saved = await saveImage(file);
   return db.asset.create({
     data: {
-      storageKey: `uploads/${saved.key}`,
+      storageKey: saved.key,
       mimeType: saved.mimeType,
       width: saved.width,
       height: saved.height,

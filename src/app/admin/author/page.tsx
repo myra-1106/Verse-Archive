@@ -2,6 +2,7 @@ import { updateOwnAuthorProfile } from "@/server/author-actions";
 import { requireUser } from "@/server/current-user";
 import { db } from "@/lib/db";
 import { AuthorImages } from "@/components/admin/author-images";
+import { assetUrl } from "@/lib/assets";
 
 export default async function AuthorProfilePage() {
   const user = await requireUser();
@@ -25,9 +26,9 @@ export default async function AuthorProfilePage() {
       <AuthorImages
         authorId={author.id}
         images={{
-          avatar: author.avatarAsset ? `/${author.avatarAsset.storageKey}` : null,
-          cover: author.coverAsset ? `/${author.coverAsset.storageKey}` : null,
-          wechatQr: author.wechatQrAsset ? `/${author.wechatQrAsset.storageKey}` : null,
+          avatar: assetUrl(author.avatarAsset?.storageKey),
+          cover: assetUrl(author.coverAsset?.storageKey),
+          wechatQr: assetUrl(author.wechatQrAsset?.storageKey),
         }}
       />
     </div>

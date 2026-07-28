@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
+import { put } from "@vercel/blob";
 
 const ALLOWED_IMAGE_TYPES = new Set([
   "image/jpeg",
@@ -30,7 +31,7 @@ const FORMAT_DETAILS = {
 
 export async function saveImage(
   file: File,
-  uploadDirectory = path.resolve(process.env.LOCAL_UPLOAD_DIR ?? "public/uploads"),
+  uploadDirectory = path.resolve(process.env.LOCAL_UPLOAD_DIR ?? "public"),
   now = new Date(),
 ) {
   validateImageInput(file);
@@ -44,7 +45,24 @@ export async function saveImage(
 
   const year = String(now.getUTCFullYear());
   const month = String(now.getUTCMonth() + 1).padStart(2, "0");
-  const key = `${year}/${month}/${randomUUID()}.${details.extension}`;
+  const key = `uploads/${year}/${month}/${randomUUID()}.${details.extension}`;
+
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    const blob = await put(key, bytes, {
+      access: "public",
+      addRandomSuffix: false,
+      contentType: details.mimeType,
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+    });
+    return {
+      key: blob.url,
+      mimeType: details.mimeType,
+      width: metadata.width,
+      height: metadata.height,
+      sizeBytes: bytes.length,
+    };
+  }
+
   const destination = path.join(uploadDirectory, key);
   await mkdir(path.dirname(destination), { recursive: true });
   await writeFile(destination, bytes);

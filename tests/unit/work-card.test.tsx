@@ -33,6 +33,9 @@ describe("WorkCard", () => {
       author,
       work: {
         ...work,
+        usageRequirements: "需要最新版插件",
+        acquisitionMethod: "添加作者微信获取",
+        otherNotes: "请勿二次分享",
         mainImageUrl: "/main.jpg",
         mainImageWidth: 600,
         mainImageHeight: 900,
@@ -52,5 +55,11 @@ describe("WorkCard", () => {
     expect(screen.getByTestId("compact-main-media")).toHaveStyle({ aspectRatio: "600 / 900" });
     expect(screen.getByText("XOS")).toBeInTheDocument();
     expect(screen.getByText("主题盒子")).toBeInTheDocument();
+    expect(screen.getByText("歌词与封面配色")).toBeInTheDocument();
+    expect(screen.getByText("需要最新版插件")).toBeInTheDocument();
+    expect(screen.getByText("添加作者微信获取")).toBeInTheDocument();
+    expect(screen.getByText("公开转发")).toBeInTheDocument();
+    expect(screen.getByText("添加作者微信")).toBeInTheDocument();
+    expect(screen.getByText("请勿二次分享")).toBeInTheDocument();
   });
 });

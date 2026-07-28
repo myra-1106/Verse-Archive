@@ -15,4 +15,21 @@ describe("database schema contract", () => {
     expect(schema).toMatch(/authorCategoryId\s+String\?/);
     expect(schema).toMatch(/displayOrder\s+Int\s+@default\(0\)/);
   });
+
+  it("stores configurable environments and author-owned templates", () => {
+    const schema = readFileSync(
+      join(process.cwd(), "prisma/schema.prisma"),
+      "utf8",
+    );
+
+    expect(schema).toContain("model Environment");
+    expect(schema).toContain("model WorkEnvironment");
+    expect(schema).toContain("model AuthorTemplate");
+    expect(schema).toContain("model TemplateEnvironment");
+    expect(schema).toMatch(/usageRequirements\s+String/);
+    expect(schema).toMatch(/acquisitionMethod\s+String/);
+    expect(schema).toMatch(/contactDetails\s+String/);
+    expect(schema).toMatch(/featured\s+Boolean\s+@default\(false\)/);
+    expect(schema).toContain("@@unique([authorId, name])");
+  });
 });

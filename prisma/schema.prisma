@@ -94,6 +94,7 @@ model Author {
   applications    AuthorApplication[]
   bindingHistory  AuthorBindingHistory[]
   importDrafts    ImportDraft[]
+  templates       AuthorTemplate[]
   createdAt       DateTime               @default(now())
   updatedAt       DateTime               @updatedAt
 }
@@ -142,6 +143,17 @@ model AuthorCategory {
   @@index([authorId, displayOrder])
 }
 
+model Environment {
+  id           String                @id @default(uuid())
+  name         String                @unique
+  enabled      Boolean               @default(true)
+  displayOrder Int                   @default(0)
+  works        WorkEnvironment[]
+  templates    TemplateEnvironment[]
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+}
+
 model Work {
   id                 String          @id @default(uuid())
   authorId           String
@@ -155,8 +167,13 @@ model Work {
   directPriceCents   Int
   repostPriceCents   Int
   features           String
+  usageRequirements  String          @default("")
+  acquisitionMethod  String          @default("")
   repostRequirements String
   purchaseNotes      String
+  contactDetails     String          @default("")
+  otherNotes         String          @default("")
+  featured           Boolean         @default(false)
   status             WorkStatus      @default(DRAFT)
   displayOrder       Int             @default(0)
   mainAssetId        String?
@@ -164,6 +181,7 @@ model Work {
   currentVersionId   String?         @unique
   currentVersion     WorkVersion?    @relation("CurrentVersion", fields: [currentVersionId], references: [id], onDelete: SetNull)
   images             WorkImage[]
+  environments       WorkEnvironment[]
   versions           WorkVersion[]   @relation("WorkVersions")
   favorites          Favorite[]
   viewCount          Int             @default(0)
@@ -180,6 +198,47 @@ model Work {
 
   @@index([authorId, authorCategoryId, displayOrder])
   @@index([status, publishedAt])
+}
+
+model WorkEnvironment {
+  workId        String
+  work          Work        @relation(fields: [workId], references: [id], onDelete: Cascade)
+  environmentId String
+  environment   Environment @relation(fields: [environmentId], references: [id], onDelete: Restrict)
+
+  @@id([workId, environmentId])
+}
+
+model AuthorTemplate {
+  id                 String                @id @default(uuid())
+  authorId           String
+  author             Author                @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  name               String
+  directPriceCents   Int
+  repostPriceCents   Int
+  features           String
+  usageRequirements  String                @default("")
+  acquisitionMethod  String                @default("")
+  repostRequirements String
+  purchaseNotes      String
+  contactDetails     String                @default("")
+  otherNotes         String                @default("")
+  displayOrder       Int                   @default(0)
+  environments       TemplateEnvironment[]
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+
+  @@unique([authorId, name])
+  @@index([authorId, displayOrder])
+}
+
+model TemplateEnvironment {
+  templateId    String
+  template      AuthorTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  environmentId String
+  environment   Environment    @relation(fields: [environmentId], references: [id], onDelete: Restrict)
+
+  @@id([templateId, environmentId])
 }
 
 model WorkVersion {

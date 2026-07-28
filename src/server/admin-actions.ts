@@ -1,6 +1,6 @@
 "use server";
 
-import { UserRole, UserStatus } from "@prisma/client";
+import { AuthorStatus, UserRole, UserStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
@@ -24,16 +24,30 @@ export async function createContentAdmin(formData: FormData) {
   });
   if (existingUser) redirect("/admin/admins?error=duplicate");
 
-  await db.user.create({
-    data: {
-      wechatId: data.wechatId,
-      displayName: data.displayName,
-      passwordHash: await hashPassword(data.password),
-      role: UserRole.CONTENT_ADMIN,
-      mustChangePassword: true,
-    },
+  const passwordHash = await hashPassword(data.password);
+  await db.$transaction(async (tx) => {
+    const user = await tx.user.create({
+      data: {
+        wechatId: data.wechatId,
+        displayName: data.displayName,
+        passwordHash,
+        role: UserRole.CONTENT_ADMIN,
+        mustChangePassword: true,
+      },
+    });
+    await tx.author.create({
+      data: {
+        accountUserId: user.id,
+        name: user.displayName,
+        publicWechatId: user.wechatId,
+        slug: `author-${user.id}`,
+        status: AuthorStatus.ACTIVE,
+      },
+    });
   });
   revalidatePath("/admin/admins");
+  revalidatePath("/admin/authors");
+  revalidatePath("/authors");
   redirect("/admin/admins?created=1");
 }
 

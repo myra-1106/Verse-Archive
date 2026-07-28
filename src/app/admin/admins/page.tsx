@@ -17,7 +17,7 @@ export default async function AdminAccountsPage({
   return (
     <div className="max-w-3xl">
       <h1 className="text-3xl font-semibold">管理员账号</h1>
-      <p className="mt-3 text-muted">内容管理员可以管理作者、作品、分类和图片，不能创建其他管理员。</p>
+      <p className="mt-3 text-muted">内容管理员同时也是作者，可以管理作者、作品、分类和图片，不能创建其他管理员。</p>
       {query.created === "1" ? <p className="mt-5 text-sm text-green-700">管理员账号已创建。</p> : null}
       {query.error === "invalid" ? <p className="mt-5 text-sm text-red-600">请检查填写内容，初始密码至少需要 8 个字符。</p> : null}
       {query.error === "duplicate" ? <p className="mt-5 text-sm text-red-600">这个微信 ID 已经存在，请更换后重试。</p> : null}

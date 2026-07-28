@@ -4,6 +4,7 @@ import type { PublicWork } from "@/components/work-card";
 import { demoAuthors, demoCollection, demoWorks } from "@/server/demo-data";
 import type { WorkFilters } from "@/lib/work-filters";
 import { assetUrl } from "@/lib/assets";
+import { ensureDefaultEnvironments } from "@/server/environments";
 
 const publicStatuses = [WorkStatus.PUBLISHED, WorkStatus.OFF_SHELF];
 const url = assetUrl;
@@ -55,6 +56,7 @@ export async function getWorkFilterOptions() {
       categories: [], environments: [{ id: "LAB", name: "LAB" }, { id: "WCGlass", name: "WCGlass" }],
     };
   }
+  await ensureDefaultEnvironments();
   const authors = await db.author.findMany({
     where: { status: AuthorStatus.ACTIVE },
     orderBy: [{ displayOrder: "asc" }, { name: "asc" }],

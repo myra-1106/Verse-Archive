@@ -4,11 +4,13 @@ import { requireAuthorAccess } from "@/server/current-user";
 import { updateWork } from "@/server/work-actions";
 import { WorkImages } from "@/components/admin/work-images";
 import { assetUrl } from "@/lib/assets";
+import { ensureDefaultEnvironments } from "@/server/environments";
 
 export default async function EditWorkPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ saved?: string }> }) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
   const work = await db.work.findUniqueOrThrow({ where: { id }, include: { mainAsset: true, environments: true, images: { include: { asset: true }, orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }] } } });
   await requireAuthorAccess(work.authorId);
+  await ensureDefaultEnvironments();
   const [categories, environments, templates] = await Promise.all([
     db.authorCategory.findMany({ where: { authorId: work.authorId }, orderBy: { displayOrder: "asc" } }),
     db.environment.findMany({ where: { enabled: true }, orderBy: [{ displayOrder: "asc" }, { name: "asc" }] }),

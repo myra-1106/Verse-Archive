@@ -2,10 +2,12 @@ import { db } from "@/lib/db";
 import { requireUser } from "@/server/current-user";
 import { copyTemplate, deleteTemplate, moveTemplate, saveTemplate } from "@/server/template-actions";
 import { SubmitButton } from "@/components/admin/submit-button";
+import { ensureDefaultEnvironments } from "@/server/environments";
 
 export default async function TemplatesPage({ searchParams }: { searchParams: Promise<{ edit?: string; saved?: string; copied?: string; deleted?: string; moved?: string }> }) {
   const user = await requireUser();
   if (!user.author) return <p>请先绑定作者资料后再使用模板。</p>;
+  await ensureDefaultEnvironments();
   const query = await searchParams;
   const [templates, environments] = await Promise.all([
     db.authorTemplate.findMany({ where: { authorId: user.author.id }, include: { environments: true }, orderBy: [{ displayOrder: "asc" }, { createdAt: "asc" }] }),

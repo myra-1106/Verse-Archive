@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { uploadAuthorImage } from "@/server/upload-actions";
+import { prepareImageInput } from "@/lib/client-image";
 
 type ImageKind = "avatar" | "cover" | "wechatQr";
 
@@ -17,6 +19,18 @@ export function AuthorImages({
   authorId: string;
   images: Record<ImageKind, string | null>;
 }) {
+  const [error, setError] = useState("");
+
+  async function upload(input: HTMLInputElement) {
+    try {
+      setError("");
+      await prepareImageInput(input);
+      input.form?.requestSubmit();
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "图片处理失败，请换一张重试");
+    }
+  }
+
   return (
     <section className="mt-10">
       <h2 className="text-lg font-semibold">作者图片</h2>
@@ -28,11 +42,12 @@ export function AuthorImages({
             <div className="aspect-square overflow-hidden rounded-xl bg-background">
               {images[kind] ? <img alt={label} className="h-full w-full object-cover" src={images[kind]!} /> : null}
             </div>
-            <label className="mt-3 block text-sm font-medium">{label}<input accept="image/*" className="mt-2 block w-full text-xs" name="image" onChange={(event) => event.currentTarget.form?.requestSubmit()} required type="file" /></label>
+            <label className="mt-3 block text-sm font-medium">{label}<input accept="image/*,.heic,.heif" className="mt-2 block w-full text-xs" name="image" onChange={(event) => void upload(event.currentTarget)} required type="file" /></label>
             <p className="mt-2 text-xs text-muted">从相册或文件选择后自动上传并应用</p>
           </form>
         ))}
       </div>
+      {error ? <p className="mt-3 text-sm text-red-600" role="alert">{error}</p> : null}
     </section>
   );
 }

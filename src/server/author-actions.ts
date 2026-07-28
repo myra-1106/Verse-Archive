@@ -14,11 +14,17 @@ async function currentAuthorId() {
 }
 
 export async function updateOwnAuthorProfile(formData: FormData) {
-  const authorId = await currentAuthorId();
+  const user = await requireUser();
+  if (!user.author) throw new Error("NO_AUTHOR_PROFILE");
+  const authorId = user.author.id;
   await requireAuthorAccess(authorId);
   const data = authorProfileSchema.parse(Object.fromEntries(formData));
-  await db.author.update({ where: { id: authorId }, data });
+  await db.$transaction([
+    db.author.update({ where: { id: authorId }, data }),
+    db.user.update({ where: { id: user.id }, data: { displayName: data.name } }),
+  ]);
   revalidatePath("/admin/author");
+  revalidatePath("/admin");
   revalidatePath("/authors");
 }
 

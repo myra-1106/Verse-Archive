@@ -38,6 +38,8 @@ function mapWork(work: Prisma.WorkGetPayload<{ include: typeof workInclude }>): 
     repostRequirements: work.repostRequirements, purchaseNotes: work.purchaseNotes,
     contactDetails: work.contactDetails, otherNotes: work.otherNotes,
     mainImageUrl: url(work.mainAsset?.storageKey),
+    mainImageWidth: work.mainAsset?.width,
+    mainImageHeight: work.mainAsset?.height,
     images: work.images.map((image) => ({ id: image.id, url: url(image.asset.storageKey)!, alt: image.asset.altText || `${work.name}预览图` })),
     version: work.currentVersion?.version ?? "1.0.0", updatedAt: work.updatedAt,
   };

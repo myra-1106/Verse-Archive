@@ -60,3 +60,107 @@ body {
     @apply min-h-11 rounded-full bg-foreground px-5 font-medium text-background disabled:cursor-not-allowed disabled:opacity-50;
   }
 }
+
+.mobile-nav-shell {
+  position: fixed;
+  z-index: 30;
+  right: 16px;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  left: 16px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  height: 62px;
+  padding: 6px;
+  border: 1px solid #dedee2;
+  border-radius: 22px;
+  background: #f2f2f3;
+  color: #6d6d73;
+  box-shadow: 0 8px 22px rgb(0 0 0 / 14%);
+}
+
+.mobile-nav-item {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 17px;
+  color: #6d6d73;
+  transition: color 160ms ease, background-color 160ms ease, transform 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-nav-item:active {
+  transform: scale(0.96);
+}
+
+.mobile-nav-item[data-active="true"] {
+  background: #242427;
+  color: #ffffff;
+}
+
+.mobile-nav-item-content {
+  position: relative;
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mobile-nav-item[data-active="true"] .mobile-nav-item-content {
+  animation: mobile-nav-pop 240ms ease-out;
+}
+
+.mobile-nav-indicator {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  width: 14px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  transform: translateX(-50%) scaleX(0);
+  transition: transform 160ms ease;
+}
+
+.mobile-nav-item[data-active="true"] .mobile-nav-indicator {
+  transform: translateX(-50%) scaleX(1);
+}
+
+@keyframes mobile-nav-pop {
+  0% { transform: translateY(0); }
+  45% { transform: translateY(-3px); }
+  100% { transform: translateY(0); }
+}
+
+@media (prefers-color-scheme: dark) {
+  .mobile-nav-shell {
+    border-color: #343438;
+    background: #202023;
+    color: #a6a6ac;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 38%);
+  }
+
+  .mobile-nav-item {
+    color: #a6a6ac;
+  }
+
+  .mobile-nav-item[data-active="true"] {
+    background: #ededf0;
+    color: #17171a;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-nav-item,
+  .mobile-nav-indicator {
+    transition: none;
+  }
+
+  .mobile-nav-item[data-active="true"] .mobile-nav-item-content {
+    animation: none;
+  }
+}

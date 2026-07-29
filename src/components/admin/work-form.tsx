@@ -102,5 +102,6 @@ function OptionalArea({ disabled, field, onRemove, values, setValues }: {
   disabled: boolean; field: OptionalWorkField; onRemove: () => void; values: Values;
   setValues: React.Dispatch<React.SetStateAction<Values>>;
 }) {
-  return <div><div className="flex items-center justify-between gap-3"><span className="text-sm font-medium">{OPTIONAL_WORK_FIELD_LABELS[field]}</span><button className="text-xs text-red-600" disabled={disabled} onClick={onRemove} type="button">移除</button></div><textarea className="field-input mt-2 min-h-24 py-3" name={field} onChange={(event) => setValues((current) => ({ ...current, [field]: event.target.value }))} value={values[field]} /></div>;
+  const id = `work-${field}`;
+  return <div><div className="flex items-center justify-between gap-3"><label className="text-sm font-medium" htmlFor={id}>{OPTIONAL_WORK_FIELD_LABELS[field]}</label><button className="text-xs text-red-600" disabled={disabled} onClick={onRemove} type="button">移除</button></div><textarea className="field-input mt-2 min-h-24 py-3" id={id} name={field} onChange={(event) => setValues((current) => ({ ...current, [field]: event.target.value }))} value={values[field]} /></div>;
 }

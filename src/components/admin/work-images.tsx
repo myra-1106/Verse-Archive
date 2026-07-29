@@ -11,6 +11,8 @@ import {
 } from "@/server/upload-actions";
 import { assetUrl } from "@/lib/assets";
 import { prepareImageInput } from "@/lib/client-image";
+import { SubmitButton } from "@/components/admin/submit-button";
+import { ConfirmSubmitButton } from "@/components/admin/confirm-submit-button";
 
 type Preview = WorkImage & { asset: Asset };
 
@@ -49,6 +51,7 @@ export function WorkImages({
   }
 
   async function uploadPreviews(input: HTMLInputElement) {
+    let uploaded = 0;
     try {
       setBusy(true); setError(""); setStatus("正在处理图片…");
       await prepareImageInput(input);
@@ -57,12 +60,15 @@ export function WorkImages({
         setStatus(`正在上传 ${index + 1}/${files.length}…`);
         const data = new FormData(); data.set("workId", workId); data.append("images", file);
         await uploadWorkPreviewImages(data);
+        uploaded += 1;
       }
       setStatus(`${files.length} 张预览图已上传`);
       router.refresh();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "上传失败，请重新选择");
+      const message = reason instanceof Error ? reason.message : "上传失败，请重新选择";
+      setError(uploaded ? `已成功上传 ${uploaded} 张，后续图片失败：${message}` : message);
       setStatus("");
+      if (uploaded) router.refresh();
     } finally {
       setBusy(false); input.value = "";
     }
@@ -86,9 +92,9 @@ export function WorkImages({
             <li className="flex items-center gap-3 rounded-2xl border border-border p-3" key={preview.id}>
               <img alt={preview.asset.altText} className="h-20 w-24 rounded-xl object-contain" src={assetUrl(preview.asset.storageKey)!} />
               <span className="min-w-0 flex-1 text-sm text-muted">预览图 {index + 1}</span>
-              <form action={moveWorkPreviewImage}><input name="imageId" type="hidden" value={preview.id} /><button aria-label={`上移预览图${index + 1}`} disabled={index === 0} name="direction" value="up">↑</button></form>
-              <form action={moveWorkPreviewImage}><input name="imageId" type="hidden" value={preview.id} /><button aria-label={`下移预览图${index + 1}`} disabled={index === previews.length - 1} name="direction" value="down">↓</button></form>
-              <form action={deleteWorkPreviewImage}><input name="imageId" type="hidden" value={preview.id} /><button className="text-sm text-red-600" type="submit">删除</button></form>
+              <form action={moveWorkPreviewImage}><input name="imageId" type="hidden" value={preview.id} /><SubmitButton aria-label={`上移预览图${index + 1}`} className="" disabled={index === 0} name="direction" value="up">↑</SubmitButton></form>
+              <form action={moveWorkPreviewImage}><input name="imageId" type="hidden" value={preview.id} /><SubmitButton aria-label={`下移预览图${index + 1}`} className="" disabled={index === previews.length - 1} name="direction" value="down">↓</SubmitButton></form>
+              <form action={deleteWorkPreviewImage}><input name="imageId" type="hidden" value={preview.id} /><ConfirmSubmitButton className="text-sm text-red-600" confirmMessage={`确定删除预览图 ${index + 1} 吗？`} pendingText="删除中…">删除</ConfirmSubmitButton></form>
             </li>
           ))}
         </ol>

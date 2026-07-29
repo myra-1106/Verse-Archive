@@ -2,7 +2,7 @@
 
 import { useFormStatus } from "react-dom";
 
-export function SubmitButton({ children, pendingText = "处理中…" }: { children: React.ReactNode; pendingText?: string }) {
+export function SubmitButton({ children, className = "primary-button", pendingText = "处理中…", ...props }: React.ButtonHTMLAttributes<HTMLButtonElement> & { pendingText?: string }) {
   const { pending } = useFormStatus();
-  return <button className="primary-button disabled:cursor-wait disabled:opacity-60" disabled={pending} type="submit">{pending ? pendingText : children}</button>;
+  return <button {...props} className={`${className} disabled:cursor-wait disabled:opacity-60`} disabled={pending || props.disabled} type="submit">{pending ? pendingText : children}</button>;
 }

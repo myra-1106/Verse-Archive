@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import { workSchema } from "@/lib/validation/work";
 import { requireAuthorAccess, requireRole, requireUser } from "@/server/current-user";
 import { legacyEnvironmentFlags } from "@/lib/environment-selection";
+import { normalizeWorkFieldOrder } from "@/lib/work-field-order";
 
 async function resolveAuthorId(formData: FormData) {
   const user = await requireUser();
@@ -33,7 +34,6 @@ async function parseWork(formData: FormData, authorId: string) {
     });
     environmentIds.push(environment.id);
   }
-  if (!environmentIds.length) throw new Error("请选择至少一个适配环境");
   const uniqueEnvironmentIds = [...new Set(environmentIds)];
   const validEnvironments = await db.environment.findMany({ where: { id: { in: uniqueEnvironmentIds }, enabled: true }, select: { id: true, name: true } });
   if (validEnvironments.length !== uniqueEnvironmentIds.length) throw new Error("INVALID_ENVIRONMENT");
@@ -41,6 +41,7 @@ async function parseWork(formData: FormData, authorId: string) {
     data,
     environmentIds: uniqueEnvironmentIds,
     legacyFlags: legacyEnvironmentFlags(validEnvironments.map(({ name }) => name)),
+    fieldOrder: normalizeWorkFieldOrder(formData.getAll("fieldOrder")),
   };
 }
 
@@ -49,11 +50,11 @@ export async function createWork(formData: FormData) {
   const authorId = await resolveAuthorId(formData);
   await requireAuthorAccess(authorId);
   formData.set("slug", `work-${randomUUID()}`);
-  const { data, environmentIds, legacyFlags } = await parseWork(formData, authorId);
+  const { data, environmentIds, legacyFlags, fieldOrder } = await parseWork(formData, authorId);
   const version = String(formData.get("version") ?? "1.0.0").trim();
   const work = await db.$transaction(async (tx) => {
     const created = await tx.work.create({ data: {
-      ...data, authorId, createdById: user.id, updatedById: user.id,
+      ...data, fieldOrder, authorId, createdById: user.id, updatedById: user.id,
       environments: { create: environmentIds.map((environmentId) => ({ environmentId })) },
       ...legacyFlags,
     } });
@@ -68,9 +69,9 @@ export async function updateWork(formData: FormData) {
   const workId = String(formData.get("workId") ?? "");
   const work = await db.work.findUniqueOrThrow({ where: { id: workId }, include: { author: true } });
   await requireAuthorAccess(work.authorId);
-  const { data, environmentIds, legacyFlags } = await parseWork(formData, work.authorId);
+  const { data, environmentIds, legacyFlags, fieldOrder } = await parseWork(formData, work.authorId);
   await db.work.update({ where: { id: work.id }, data: {
-    ...data, ...legacyFlags, updatedById: user.id,
+    ...data, fieldOrder, ...legacyFlags, updatedById: user.id,
     environments: { deleteMany: {}, create: environmentIds.map((environmentId) => ({ environmentId })) },
   } });
   revalidatePath(`/admin/works/${work.id}/edit`);

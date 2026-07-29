@@ -51,7 +51,7 @@ describe("WorkCard", () => {
     expect(screen.queryByRole("link", { name: "查看详情" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "放大上机效果一" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "放大上机效果二" })).toBeInTheDocument();
-    expect(screen.getByTestId("compact-preview-strip")).toHaveStyle({ height: "min(40%, 144px)" });
+    expect(screen.getByTestId("compact-preview-strip")).toHaveClass("h-20");
     expect(screen.getByTestId("compact-main-media")).toHaveStyle({ aspectRatio: "600 / 900" });
     expect(screen.getByText("XOS")).toBeInTheDocument();
     expect(screen.getByText("主题盒子")).toBeInTheDocument();

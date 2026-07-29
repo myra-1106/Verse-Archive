@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { normalizeWorkFieldOrder } from "@/lib/work-field-order";
 import { requireAuthorAccess, requireUser } from "@/server/current-user";
 
 async function ownAuthorId() {
@@ -26,7 +27,7 @@ async function templateData(formData: FormData, authorId: string) {
   const environmentIds = [...new Set(formData.getAll("environmentIds").map(String).filter(Boolean))];
   if (!text(formData, "name")) throw new Error("请输入模板名称");
   const count = await db.environment.count({ where: { id: { in: environmentIds }, enabled: true } });
-  if (!environmentIds.length || count !== environmentIds.length) throw new Error("请选择适配环境");
+  if (count !== environmentIds.length) throw new Error("适配环境无效");
   return {
     authorId,
     name: text(formData, "name"),
@@ -39,6 +40,7 @@ async function templateData(formData: FormData, authorId: string) {
     purchaseNotes: text(formData, "purchaseNotes"),
     contactDetails: text(formData, "contactDetails"),
     otherNotes: text(formData, "otherNotes"),
+    fieldOrder: normalizeWorkFieldOrder(formData.getAll("fieldOrder")),
     environments: { create: environmentIds.map((environmentId) => ({ environmentId })) },
   };
 }
@@ -70,6 +72,7 @@ export async function copyTemplate(formData: FormData) {
     features: source.features, usageRequirements: source.usageRequirements, acquisitionMethod: source.acquisitionMethod,
     repostRequirements: source.repostRequirements, purchaseNotes: source.purchaseNotes, contactDetails: source.contactDetails,
     otherNotes: source.otherNotes, displayOrder: await db.authorTemplate.count({ where: { authorId } }),
+    fieldOrder: normalizeWorkFieldOrder(source.fieldOrder),
     environments: { create: source.environments.map(({ environmentId }) => ({ environmentId })) },
   } });
   revalidatePath("/admin/templates");

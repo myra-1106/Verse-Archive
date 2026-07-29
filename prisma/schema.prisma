@@ -173,6 +173,7 @@ model Work {
   purchaseNotes      String
   contactDetails     String          @default("")
   otherNotes         String          @default("")
+  fieldOrder         Json?
   featured           Boolean         @default(false)
   status             WorkStatus      @default(DRAFT)
   displayOrder       Int             @default(0)
@@ -223,6 +224,7 @@ model AuthorTemplate {
   purchaseNotes      String
   contactDetails     String                @default("")
   otherNotes         String                @default("")
+  fieldOrder         Json?
   displayOrder       Int                   @default(0)
   environments       TemplateEnvironment[]
   createdAt          DateTime              @default(now())

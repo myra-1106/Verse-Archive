@@ -42,21 +42,28 @@ async function normalizeImage(file: File) {
   const image = await loadImage(source);
   const scale = Math.min(1, MAX_SIDE / Math.max(image.naturalWidth, image.naturalHeight));
   const canvas = document.createElement("canvas");
-  canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-  canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-  canvas.getContext("2d")?.drawImage(image, 0, 0, canvas.width, canvas.height);
+  try {
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("当前浏览器无法处理这张照片");
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-  let quality = 0.82;
-  let output = await canvasBlob(canvas, quality);
-  while (output.size > MAX_OUTPUT_BYTES && quality > 0.46) {
-    quality -= 0.12;
-    output = await canvasBlob(canvas, quality);
+    let quality = 0.82;
+    let output = await canvasBlob(canvas, quality);
+    while (output.size > MAX_OUTPUT_BYTES && quality > 0.46) {
+      quality -= 0.12;
+      output = await canvasBlob(canvas, quality);
+    }
+
+    return new File([output], file.name.replace(/\.[^.]+$/, "") + ".webp", {
+      type: "image/webp",
+      lastModified: Date.now(),
+    });
+  } finally {
+    canvas.width = 0;
+    canvas.height = 0;
   }
-
-  return new File([output], file.name.replace(/\.[^.]+$/, "") + ".webp", {
-    type: "image/webp",
-    lastModified: Date.now(),
-  });
 }
 
 export async function prepareImageInput(input: HTMLInputElement, maxFiles = Number.POSITIVE_INFINITY) {

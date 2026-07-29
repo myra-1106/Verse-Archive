@@ -37,6 +37,7 @@ function mapWork(work: Prisma.WorkGetPayload<{ include: typeof workInclude }>): 
     features: work.features, usageRequirements: work.usageRequirements, acquisitionMethod: work.acquisitionMethod,
     repostRequirements: work.repostRequirements, purchaseNotes: work.purchaseNotes,
     contactDetails: work.contactDetails, otherNotes: work.otherNotes,
+    fieldOrder: work.fieldOrder,
     mainImageUrl: url(work.mainAsset?.storageKey),
     mainImageWidth: work.mainAsset?.width,
     mainImageHeight: work.mainAsset?.height,

@@ -27,4 +27,16 @@ describe("workSchema", () => {
     expect(workSchema.safeParse({ ...valid, directPriceYuan: "-1" }).success).toBe(false);
     expect(workSchema.safeParse({ ...valid, directPriceYuan: "28.001" }).success).toBe(false);
   });
+
+  it("accepts optional card information as empty", () => {
+    const result = workSchema.safeParse({
+      ...valid,
+      directPriceYuan: "",
+      repostPriceYuan: "",
+      features: "",
+      repostRequirements: "",
+      purchaseNotes: "",
+    });
+    expect(result.success).toBe(true);
+  });
 });

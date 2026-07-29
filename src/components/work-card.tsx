@@ -9,8 +9,15 @@ import { normalizeWorkFieldOrder, type WorkFieldKey } from "@/lib/work-field-ord
 export type PublicWork = { id: string; name: string; status: "PUBLISHED" | "OFF_SHELF"; supportsLab: boolean; supportsWcglass: boolean; environments?: string[]; directPriceCents: number; repostPriceCents: number; features: string; usageRequirements?: string; acquisitionMethod?: string; repostRequirements: string; purchaseNotes: string; contactDetails?: string; otherNotes?: string; fieldOrder?: unknown; mainImageUrl: string | null; mainImageWidth?: number; mainImageHeight?: number; images: { id: string; url: string; alt: string }[]; version: string; updatedAt: Date };
 export type PublicWorkAuthor = { name: string; publicWechatId: string; qrUrl: string | null };
 
-export function formatCny(cents: number) { const value = cents / 100; return new Intl.NumberFormat("zh-CN", { style: "currency", currency: "CNY", minimumFractionDigits: cents % 100 ? 2 : 0 }).format(value).replace("CN¥", "¥"); }
-function formatDate(value: Date) { return new Intl.DateTimeFormat("zh-CN", { timeZone: "Asia/Shanghai" }).format(value); }
+export function formatCny(cents: number) {
+  const value = cents / 100;
+  return `¥${cents % 100 ? value.toFixed(2) : String(value)}`;
+}
+
+export function formatChinaDate(value: Date) {
+  const china = new Date(value.getTime() + 8 * 60 * 60 * 1000);
+  return `${china.getUTCFullYear()}/${china.getUTCMonth() + 1}/${china.getUTCDate()}`;
+}
 
 export function WorkCard({ work, author, compact = false }: { work: PublicWork; author: PublicWorkAuthor; compact?: boolean }) {
   const offShelf = work.status === "OFF_SHELF";
@@ -34,7 +41,7 @@ export function WorkCard({ work, author, compact = false }: { work: PublicWork; 
     if (field === "purchaseNotes") return work.purchaseNotes ? <CompactInfo label="购买须知">{work.purchaseNotes}</CompactInfo> : null;
     if (field === "contactDetails") return work.contactDetails ? <CompactInfo label="联系方式">{work.contactDetails}</CompactInfo> : null;
     if (field === "otherNotes") return work.otherNotes ? <CompactInfo label="其他说明">{work.otherNotes}</CompactInfo> : null;
-    if (field === "version") return <p className="text-muted">版本 {work.version} · {formatDate(work.updatedAt)}</p>;
+    if (field === "version") return <p className="text-muted">版本 {work.version} · {formatChinaDate(work.updatedAt)}</p>;
     if (field === "previews") return work.images.length ? <div className="relative z-20 flex h-20 shrink-0 snap-x gap-2 overflow-x-auto py-1" data-testid="compact-preview-strip">
       {work.images.map((image, index) => <button aria-label={`放大${image.alt}`} className="h-full min-w-14 snap-start overflow-hidden rounded-lg bg-background sm:min-w-20" key={image.id} onClick={() => setLightboxIndex(index + previewOffset)} type="button"><Image alt={image.alt} className="h-full w-full object-contain" height={120} src={image.url} width={160}/></button>)}
     </div> : null;
@@ -68,7 +75,7 @@ export function WorkCard({ work, author, compact = false }: { work: PublicWork; 
     if (field === "purchaseNotes") return work.purchaseNotes ? <Info title="购买须知">{work.purchaseNotes}</Info> : null;
     if (field === "contactDetails") return work.contactDetails ? <Info title="联系方式">{work.contactDetails}</Info> : null;
     if (field === "otherNotes") return work.otherNotes ? <Info title="其他说明">{work.otherNotes}</Info> : null;
-    if (field === "version") return <p className="my-5 text-xs text-muted">v{work.version} · 更新于 {formatDate(work.updatedAt)}</p>;
+    if (field === "version") return <p className="my-5 text-xs text-muted">v{work.version} · 更新于 {formatChinaDate(work.updatedAt)}</p>;
     if (field === "previews") return work.images.length ? <div className="mt-4 flex snap-x gap-3 overflow-x-auto pb-2">{work.images.map((image, index) => <button className="min-w-40 snap-start cursor-zoom-in" type="button" onClick={() => setLightboxIndex(index + previewOffset)} key={image.id}><Image className="aspect-[4/3] w-full rounded-2xl object-contain" src={image.url} width={640} height={480} alt={image.alt} /></button>)}</div> : null;
     return null;
   };

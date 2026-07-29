@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { createElement } from "react";
 import { describe, expect, it } from "vitest";
-import { WorkCard } from "@/components/work-card";
+import { formatChinaDate, formatCny, WorkCard } from "@/components/work-card";
 
 const work = {
   id: "work-1", name: "春日来信", status: "PUBLISHED" as const,
@@ -12,6 +12,12 @@ const work = {
 const author = { name: "南枝", publicWechatId: "nanzhi_2026", qrUrl: null };
 
 describe("WorkCard", () => {
+  it("formats prices and dates deterministically on server and browser", () => {
+    expect(formatCny(620)).toBe("¥6.20");
+    expect(formatCny(1200)).toBe("¥12");
+    expect(formatChinaDate(new Date("2026-07-28T20:11:49.200Z"))).toBe("2026/7/29");
+  });
+
   it("shows complete work information and prices", () => {
     render(createElement(WorkCard, { work, author }));
     expect(screen.getByRole("heading", { name: "春日来信" })).toBeInTheDocument();

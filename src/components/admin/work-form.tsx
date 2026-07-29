@@ -25,7 +25,7 @@ export function WorkForm({ action, work, categories, authorId, environments, sel
   environments: Environment[]; selectedEnvironmentIds?: string[]; templates?: Template[];
 }) {
   const initial: Values = {
-    directPriceYuan: work ? String(work.directPriceCents / 100) : "", repostPriceYuan: work ? String(work.repostPriceCents / 100) : "",
+    directPriceYuan: work?.directPriceCents ? String(work.directPriceCents / 100) : "", repostPriceYuan: work?.repostPriceCents ? String(work.repostPriceCents / 100) : "",
     features: work?.features ?? "", usageRequirements: work?.usageRequirements ?? "", acquisitionMethod: work?.acquisitionMethod ?? "",
     repostRequirements: work?.repostRequirements ?? "", purchaseNotes: work?.purchaseNotes ?? "", contactDetails: work?.contactDetails ?? "", otherNotes: work?.otherNotes ?? "",
   };

@@ -92,9 +92,9 @@ export function WorkImages({
             <li className="flex items-center gap-3 rounded-2xl border border-border p-3" key={preview.id}>
               <img alt={preview.asset.altText} className="h-20 w-24 rounded-xl object-contain" src={assetUrl(preview.asset.storageKey)!} />
               <span className="min-w-0 flex-1 text-sm text-muted">预览图 {index + 1}</span>
-              <form action={moveWorkPreviewImage}><input name="imageId" type="hidden" value={preview.id} /><SubmitButton aria-label={`上移预览图${index + 1}`} className="" disabled={index === 0} name="direction" value="up">↑</SubmitButton></form>
-              <form action={moveWorkPreviewImage}><input name="imageId" type="hidden" value={preview.id} /><SubmitButton aria-label={`下移预览图${index + 1}`} className="" disabled={index === previews.length - 1} name="direction" value="down">↓</SubmitButton></form>
-              <form action={deleteWorkPreviewImage}><input name="imageId" type="hidden" value={preview.id} /><ConfirmSubmitButton className="text-sm text-red-600" confirmMessage={`确定删除预览图 ${index + 1} 吗？`} pendingText="删除中…">删除</ConfirmSubmitButton></form>
+              <form action={moveWorkPreviewImage} onSubmit={() => setStatus("")}><input name="imageId" type="hidden" value={preview.id} /><SubmitButton aria-label={`上移预览图${index + 1}`} className="" disabled={index === 0} name="direction" value="up">↑</SubmitButton></form>
+              <form action={moveWorkPreviewImage} onSubmit={() => setStatus("")}><input name="imageId" type="hidden" value={preview.id} /><SubmitButton aria-label={`下移预览图${index + 1}`} className="" disabled={index === previews.length - 1} name="direction" value="down">↓</SubmitButton></form>
+              <form action={deleteWorkPreviewImage} onSubmit={() => setStatus("")}><input name="imageId" type="hidden" value={preview.id} /><ConfirmSubmitButton className="text-sm text-red-600" confirmMessage={`确定删除预览图 ${index + 1} 吗？`} pendingText="删除中…">删除</ConfirmSubmitButton></form>
             </li>
           ))}
         </ol>

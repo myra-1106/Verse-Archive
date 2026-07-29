@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 
 const items = [
   { href: "/", label: "首页", icon: HomeIcon },
@@ -16,10 +17,20 @@ function matches(pathname: string, href: string) {
 
 export function MobileNav() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
+
+  useEffect(() => {
+    items.forEach(({ href }) => router.prefetch(href));
+  }, [router]);
+
+  useEffect(() => {
+    setPendingHref(null);
+  }, [pathname]);
 
   return <nav aria-label="手机导航" className="mobile-nav-shell sm:hidden">
     {items.map(({ href, label, icon: Icon }) => {
-      const active = matches(pathname, href);
+      const active = pendingHref ? pendingHref === href : matches(pathname, href);
       return <Link
         aria-current={active ? "page" : undefined}
         className="mobile-nav-item"
@@ -27,9 +38,17 @@ export function MobileNav() {
         href={href}
         key={href}
         onClick={(event) => {
-          if (!active) return;
-          event.preventDefault();
-          window.scrollTo({ top: 0, behavior: "smooth" });
+          if (matches(pathname, href)) {
+            event.preventDefault();
+            setPendingHref(null);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            return;
+          }
+          setPendingHref(href);
+        }}
+        onPointerDown={() => {
+          router.prefetch(href);
+          if (!matches(pathname, href)) setPendingHref(href);
         }}
       >
         <span className="mobile-nav-item-content">

@@ -1,17 +1,32 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MobileNav } from "@/components/mobile-nav";
 
 let pathname = "/";
+const prefetch = vi.fn();
 
 vi.mock("next/navigation", () => ({
   usePathname: () => pathname,
+  useRouter: () => ({ prefetch }),
 }));
 
 describe("MobileNav", () => {
   beforeEach(() => {
     pathname = "/";
+    prefetch.mockClear();
     window.scrollTo = vi.fn();
+  });
+
+  it("prefetches every destination and selects a destination immediately on pointer down", () => {
+    render(<MobileNav />);
+
+    expect(prefetch.mock.calls.map(([href]) => href)).toEqual(["/", "/authors", "/settings"]);
+
+    const authors = screen.getByRole("link", { name: "合集" });
+    fireEvent.pointerDown(authors);
+
+    expect(prefetch).toHaveBeenCalledWith("/authors");
+    expect(authors).toHaveAttribute("aria-current", "page");
   });
 
   it("keeps the three required destinations and marks the current page", () => {

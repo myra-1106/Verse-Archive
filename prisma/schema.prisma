@@ -88,6 +88,7 @@ model Author {
   wechatQrAsset   Asset?                 @relation("AuthorWechatQr", fields: [wechatQrAssetId], references: [id], onDelete: SetNull)
   seoTitle        String?
   seoDescription  String?
+  hiddenWorkFields Json?
   displayOrder    Int                    @default(0)
   categories      AuthorCategory[]
   works           Work[]

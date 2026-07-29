@@ -84,5 +84,5 @@ export function WorkCard({ work, author, compact = false }: { work: PublicWork; 
 
 function Tag({ children }: { children: React.ReactNode }) { return <span className="rounded-full bg-background px-3 py-1 text-xs">{children}</span>; }
 function Price({ label, value }: { label: string; value: string }) { return <div><p className="text-xs text-muted">{label}</p><p className="mt-1 text-lg font-semibold">{value}</p></div>; }
-function Info({ title, children }: { title: string; children: React.ReactNode }) { return <div className="mt-5 text-sm leading-6"><strong>{title}</strong><p className="mt-1 text-muted">{children}</p></div>; }
-function CompactInfo({ label, children }: { label: string; children: React.ReactNode }) { return <p><strong>{label}：</strong><span className="text-muted">{children}</span></p>; }
+function Info({ title, children }: { title: string; children: React.ReactNode }) { return <div className="mt-5 text-sm leading-6"><strong>{title}</strong><p className="mt-1 whitespace-pre-line text-muted">{children}</p></div>; }
+function CompactInfo({ label, children }: { label: string; children: React.ReactNode }) { return <p className="whitespace-pre-line"><strong>{label}：</strong><span className="text-muted">{children}</span></p>; }

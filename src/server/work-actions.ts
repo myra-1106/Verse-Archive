@@ -9,6 +9,7 @@ import { workSchema } from "@/lib/validation/work";
 import { requireAuthorAccess, requireRole, requireUser } from "@/server/current-user";
 import { legacyEnvironmentFlags } from "@/lib/environment-selection";
 import { normalizeWorkFieldOrder } from "@/lib/work-field-order";
+import { normalizeHiddenWorkFields } from "@/lib/author-work-fields";
 
 async function resolveAuthorId(formData: FormData) {
   const user = await requireUser();
@@ -70,8 +71,10 @@ export async function updateWork(formData: FormData) {
   const work = await db.work.findUniqueOrThrow({ where: { id: workId }, include: { author: true } });
   await requireAuthorAccess(work.authorId);
   const { data, environmentIds, legacyFlags, fieldOrder } = await parseWork(formData, work.authorId);
+  const preservedData = { ...data };
+  for (const field of normalizeHiddenWorkFields(work.author.hiddenWorkFields)) preservedData[field] = work[field];
   await db.work.update({ where: { id: work.id }, data: {
-    ...data, fieldOrder, ...legacyFlags, updatedById: user.id,
+    ...preservedData, fieldOrder, ...legacyFlags, updatedById: user.id,
     environments: { deleteMany: {}, create: environmentIds.map((environmentId) => ({ environmentId })) },
   } });
   revalidatePath(`/admin/works/${work.id}/edit`);

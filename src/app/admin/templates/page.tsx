@@ -33,5 +33,5 @@ export default async function TemplatesPage({ searchParams }: { searchParams: Pr
   </div>;
 }
 
-function Field({ label, name, required = false, value = "" }: { label: string; name: string; required?: boolean; value?: string }) { return <label className="block text-sm font-medium">{label}<input className="field-input mt-2" defaultValue={value} name={name} required={required} /></label>; }
+function Field({ label, name, required = false, value = "" }: { label: string; name: string; required?: boolean; value?: string }) { const price = name.endsWith("PriceYuan"); return <label className="block text-sm font-medium">{label}<input className="field-input mt-2" defaultValue={value} inputMode={price ? "decimal" : undefined} name={name} pattern={price ? "\\d{1,7}(?:\\.\\d{1,2})?" : undefined} required={required} /></label>; }
 function Area({ label, name, value = "" }: { label: string; name: string; value?: string }) { return <label className="block text-sm font-medium">{label}<textarea className="field-input mt-2 min-h-20 py-3" defaultValue={value} name={name} /></label>; }

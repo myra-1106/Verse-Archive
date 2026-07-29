@@ -10,20 +10,23 @@ export function LoginForm() {
   async function submit(formData: FormData) {
     setPending(true);
     setError(null);
-    const result = await signIn("credentials", {
-      wechatId: formData.get("wechatId"),
-      password: formData.get("password"),
-      redirect: false,
-      callbackUrl: "/",
-    });
-    setPending(false);
-
-    if (!result?.ok) {
-      setError("微信 ID 或密码不正确");
-      return;
+    try {
+      const result = await signIn("credentials", {
+        wechatId: formData.get("wechatId"),
+        password: formData.get("password"),
+        redirect: false,
+        callbackUrl: "/",
+      });
+      if (!result?.ok) {
+        setError("微信 ID 或密码不正确");
+        return;
+      }
+      window.location.assign(result.url ?? "/");
+    } catch {
+      setError("网络连接失败，请稍后重试");
+    } finally {
+      setPending(false);
     }
-
-    window.location.assign(result.url ?? "/");
   }
 
   return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 export function ProtectedForm({
   action,
@@ -32,9 +32,5 @@ export function ProtectedForm({
     };
   }, [dirty]);
 
-  function submit(_event: FormEvent<HTMLFormElement>) {
-    setDirty(false);
-  }
-
-  return <form action={action} className={className} onChangeCapture={() => setDirty(true)} onSubmit={submit}>{children}</form>;
+  return <form action={action} className={className} onChangeCapture={() => setDirty(true)} onSubmit={() => setDirty(false)}>{children}</form>;
 }

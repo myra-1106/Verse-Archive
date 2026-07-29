@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 export default function ErrorPage({
   error,
   reset,
@@ -12,7 +14,7 @@ export default function ErrorPage({
     <p className="mt-3 text-sm text-muted">{friendlyMessage(error.message)}</p>
     <div className="mt-6 flex gap-3">
       <button className="primary-button" onClick={reset} type="button">重新尝试</button>
-      <a className="rounded-full border border-border px-5 py-3 text-sm" href="/">返回首页</a>
+      <Link className="rounded-full border border-border px-5 py-3 text-sm" href="/">返回首页</Link>
     </div>
   </main>;
 }
